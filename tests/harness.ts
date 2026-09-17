@@ -4,6 +4,7 @@ import type { App } from 'vue'
 import type { Router } from 'vue-router'
 import { apiClient } from '../src/api/client'
 import { createOrbitApp } from '../src/main'
+import { resetAuthSession } from '../src/auth/store'
 
 export const httpMock = new AxiosMockAdapter(apiClient)
 
@@ -35,4 +36,5 @@ export function resetTestHarness(): void {
   httpMock.reset()
   sessionStorage.clear()
   document.body.innerHTML = ''
+  resetAuthSession()
 }

@@ -20,7 +20,15 @@ export function createOrbitRouter(auth: AuthStore): Router {
     ],
   })
 
-  router.beforeEach((to) => {
+  router.beforeEach(async (to) => {
+    if (to.meta.requiresAuth && auth.accessToken && !auth.managementAccount && !auth.restoreAttempted) {
+      try {
+        await auth.restoreSession()
+      } catch {
+        // failed restore falls through to unauthenticated redirect
+      }
+    }
+
     if (to.meta.requiresAuth && !auth.isAuthenticated) {
       return {
         name: 'login',

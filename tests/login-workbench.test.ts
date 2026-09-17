@@ -81,7 +81,7 @@ describe('login and workbench', () => {
       ]
     })
 
-    const { wrapper, router } = mountApplication('/workbench')
+    const { wrapper, router } = mountApplication('/login?redirect=%2Fworkbench')
     await router.isReady()
     await flushPromises()
 

@@ -10,7 +10,13 @@ const auth = useAuthStore()
 const phone = ref('')
 const password = ref('')
 const submitting = ref(false)
-const errorMessage = ref('')
+const errorMessage = ref(
+  auth.restoreError
+    ? loginError(auth.restoreError)
+    : route.query.restore === 'failed'
+      ? '暂时无法确认当前管理端账号，请重试或返回登录'
+      : '',
+)
 const canRetryAccount = computed(() => Boolean(auth.accessToken && !auth.managementAccount))
 
 function loginError(error: unknown): string {
@@ -59,6 +65,7 @@ async function submit() {
 
 onBeforeUnmount(() => {
   password.value = ''
+  auth.restoreError = null
 })
 </script>
 
