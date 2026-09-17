@@ -44,6 +44,8 @@ status: closed
 
 - [提供本地联调所需的网关配置与访问条件](issues/09-local-gateway-access.md) — 已取得配置访问条件并核实网关路由与代理路径依据；运行状态和未验收项见议题核查记录。
 
+- [登录并进入工作台](issues/12-login-workbench.md) — 已交付登录、当前管理端账号初始化、受保护工作台、本地退出及自动检查；真实联调与浏览器人工验收仍待执行。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。

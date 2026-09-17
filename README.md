@@ -1,12 +1,24 @@
 # orbit-admin
 
-面向 B 端管理场景的独立前端脚手架，服务现有 Framework-Java 后端，并以复制模板后独立开发的方式供后续项目复用。
+面向 B 端管理场景的独立前端脚手架，服务现有 Framework-Java 后端。
 
-当前处于规划阶段，尚无前端应用代码。
+## 开发
 
-- [决策地图](docs/planning/map.md)
-- [本地议题约定](docs/planning/tracker.md)
+需要 Node `24.15.0` 和 pnpm `12.4.2`。首次安装依赖（使用锁文件）：
 
-技术方向：Vue 3、Vite、TypeScript、Vue Router、Pinia、Axios、SCSS。Element Plus 为待验证候选，不预先锁定。
+```sh
+corepack pnpm install --frozen-lockfile
+corepack pnpm dev
+```
 
-视觉方向：深墨绿色背景、暖白文字、橙色强调、细线分区与复古编辑排版。将参考图的风格转化为适合表格与表单的后台工作台，不复制其品牌或资讯页布局。
+浏览器通过同源 `/api` 访问后端；Vite 开发代理将其转发到本地网关的 `/admin`。默认目标为 `http://127.0.0.1:18080`，可将 `.env.example` 复制为 `.env.local` 后设置 `VITE_GATEWAY_TARGET`。网关目标只在代理配置中调整，不直连业务服务。
+
+## 检查
+
+```sh
+corepack pnpm check
+```
+
+该命令依次执行格式检查、Lint、严格类型检查、测试和生产构建。也可以分别运行 `corepack pnpm test`、`corepack pnpm typecheck` 或 `corepack pnpm build`。
+
+当前已交付登录、当前管理端账号识别、工作台布局和本地退出。业务列表入口会在对应功能交付后开放；真实网关登录和浏览器人工验收尚未执行。

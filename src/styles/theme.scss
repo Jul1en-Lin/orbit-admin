@@ -1,0 +1,80 @@
+:root {
+  --orbit-ink: #153b36;
+  --orbit-ink-deep: #0b2925;
+  --orbit-cream: #f3efe5;
+  --orbit-paper: #fffdf7;
+  --orbit-orange: #e8753b;
+  --orbit-muted: #9eb4aa;
+  --orbit-line: rgba(243, 239, 229, 0.24);
+  --orbit-content-line: rgba(21, 59, 54, 0.28);
+  --orbit-input-bg: rgba(255, 253, 247, 0.08);
+  --orbit-orange-hover: #f18a53;
+  --orbit-error: #ffb39c;
+  --orbit-body-muted: #55716a;
+  --el-color-primary: var(--orbit-orange);
+  --el-color-primary-light-3: var(--orbit-orange-hover);
+  --el-color-primary-dark-2: #c15d2c;
+  --el-text-color-regular: var(--orbit-cream);
+  --el-border-radius-base: 0;
+  --orbit-space-xs: 0.5rem;
+  --orbit-space-sm: 0.8rem;
+  --orbit-space-md: 1rem;
+  --orbit-space-lg: 1.5rem;
+  --orbit-space-xl: 2rem;
+  --orbit-space-2xl: 3rem;
+  --orbit-border: 1px solid var(--orbit-line);
+  --orbit-content-border: 1px solid var(--orbit-content-line);
+  --orbit-font-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --orbit-font-serif: Georgia, 'Times New Roman', serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--orbit-ink-deep);
+  color: var(--orbit-cream);
+  font-family: var(--orbit-font-sans);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--orbit-orange);
+  outline-offset: 3px;
+}
+
+.el-form-item {
+  margin-bottom: 1.25rem;
+}
+
+.el-form-item__label {
+  color: var(--orbit-cream);
+}
+
+.el-input__wrapper {
+  border-radius: 0;
+  background: var(--orbit-input-bg);
+  box-shadow: 0 0 0 1px var(--orbit-line) inset;
+}
+
+.el-input__inner {
+  color: var(--orbit-cream);
+}
+
+.el-input__inner::placeholder {
+  color: var(--orbit-muted);
+}
