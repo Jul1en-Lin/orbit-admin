@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, type Router } from 'vue-router'
 import WorkbenchView from '../views/WorkbenchView.vue'
 import LoginView from '../views/LoginView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
+import AccountListView from '../views/AccountListView.vue'
 import { useAuthStore } from '../auth/store'
 
 type AuthStore = ReturnType<typeof useAuthStore>
@@ -10,8 +11,14 @@ export function createOrbitRouter(auth: AuthStore): Router {
   const router = createRouter({
     history: createWebHistory(),
     routes: [
-      { path: '/', redirect: '/workbench' },
+      { path: '/', redirect: '/accounts' },
       { path: '/login', name: 'login', component: LoginView },
+      {
+        path: '/accounts',
+        name: 'accounts',
+        component: AccountListView,
+        meta: { requiresAuth: true },
+      },
       {
         path: '/workbench',
         name: 'workbench',

@@ -3,8 +3,8 @@ id: account-list-query
 title: 管理端账号列表查询与筛选
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: codex
 order: 25
 blocked_by: ["page-test-harness"]
 ---
@@ -23,9 +23,9 @@ blocked_by: ["page-test-harness"]
 
 ## Acceptance criteria
 
-- [ ] 默认业务页调用管理端账号列表接口，JSON 可选字段为 ID、手机号、状态，全部精确匹配；返回数组，不添加分页或排序。
-- [ ] 展示 ID、手机号、昵称、身份、状态、备注；长文本可完整查看；不提供编辑、删除、重置密码或停用入口。
-- [ ] 点击查询或回车才应用筛选；重置清空筛选并重新查询；重新进入页面恢复默认状态，不在全局状态中缓存筛选与列表。
+- [x] 默认业务页调用管理端账号列表接口，JSON 可选字段为 ID、手机号、状态，全部精确匹配；返回数组，不添加分页或排序。
+- [x] 展示 ID、手机号、昵称、身份、状态、备注；长文本可完整查看；不提供编辑、删除、重置密码或停用入口。
+- [x] 点击查询或回车才应用筛选；重置清空筛选并重新查询；重新进入页面恢复默认状态，不在全局状态中缓存筛选与列表。
 
 ## Blocked by
 

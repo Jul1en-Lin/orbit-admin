@@ -19,8 +19,7 @@ function signOut() {
         <span>ORBIT ADMIN</span>
       </div>
       <nav class="primary-nav" aria-label="主导航">
-        <a class="nav-item is-active" href="#" @click.prevent>工作台</a>
-        <span class="nav-item is-disabled" aria-disabled="true">管理端账号</span>
+        <router-link to="/accounts" class="nav-item" active-class="is-active">管理端账号</router-link>
         <span class="nav-item is-disabled" aria-disabled="true">字典</span>
         <span class="nav-item is-disabled" aria-disabled="true">参数</span>
       </nav>
