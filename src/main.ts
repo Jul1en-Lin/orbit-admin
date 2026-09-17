@@ -5,6 +5,7 @@ import 'element-plus/dist/index.css'
 import App from './App.vue'
 import { createOrbitRouter } from './router'
 import { useAuthStore } from './auth/store'
+import { setSessionExpiredHandler } from './api/client'
 import './styles/theme.scss'
 
 export function createOrbitApp() {
@@ -17,6 +18,11 @@ export function createOrbitApp() {
   app.component('ElButton', ElButton)
   app.component('ElFormItem', ElFormItem)
   app.component('ElInput', ElInput)
+
+  setSessionExpiredHandler(() => {
+    auth.handleSessionExpired(router)
+  })
+
   return app
 }
 

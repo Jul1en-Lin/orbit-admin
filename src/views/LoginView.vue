@@ -11,11 +11,13 @@ const phone = ref('')
 const password = ref('')
 const submitting = ref(false)
 const errorMessage = ref(
-  auth.restoreError
-    ? loginError(auth.restoreError)
-    : route.query.restore === 'failed'
-      ? '暂时无法确认当前管理端账号，请重试或返回登录'
-      : '',
+  auth.sessionExpired
+    ? '登录状态已失效，请重新输入'
+    : auth.restoreError
+      ? loginError(auth.restoreError)
+      : route.query.restore === 'failed'
+        ? '暂时无法确认当前管理端账号，请重试或返回登录'
+        : '',
 )
 const canRetryAccount = computed(() => Boolean(auth.accessToken && !auth.managementAccount))
 
@@ -23,6 +25,11 @@ function loginError(error: unknown): string {
   if (error instanceof ApiError && error.kind === 'network') return '网络暂时不可用，请稍后重试'
   if (error instanceof ApiError && error.status === 401) return '登录状态已失效，请重新输入'
   if (auth.accessToken) return '暂时无法确认当前管理端账号，请重试或返回登录'
+  return '手机号或密码错误，请检查后重试'
+}
+
+function submitError(error: unknown): string {
+  if (error instanceof ApiError && error.kind === 'network') return '网络暂时不可用，请稍后重试'
   return '手机号或密码错误，请检查后重试'
 }
 
@@ -53,11 +60,12 @@ async function submit() {
   if (!phone.value || !password.value || submitting.value) return
   submitting.value = true
   errorMessage.value = ''
+  auth.sessionExpired = false
   try {
     await auth.signIn(phone.value, password.value)
     await router.push(validRedirect(route.query.redirect) ? route.query.redirect : { name: 'workbench' })
   } catch (error) {
-    errorMessage.value = loginError(error)
+    errorMessage.value = submitError(error)
   } finally {
     submitting.value = false
   }
@@ -66,6 +74,7 @@ async function submit() {
 onBeforeUnmount(() => {
   password.value = ''
   auth.restoreError = null
+  auth.sessionExpired = false
 })
 </script>
 

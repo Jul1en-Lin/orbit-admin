@@ -3,8 +3,8 @@ id: expiry-handling
 title: 统一认证失效与旧会话隔离
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: codex
 order: 23
 blocked_by: ["session-restore"]
 ---
@@ -23,9 +23,9 @@ blocked_by: ["session-restore"]
 
 ## Acceptance criteria
 
-- [ ] 当前会话的多个并发认证失效只清理会话、提示并跳转一次。
-- [ ] 属于旧会话的请求无论成功或失败都不得覆盖或清除新会话；退出后的迟到响应不得恢复旧会话。
-- [ ] 登录接口自身的错误留在登录表单，不触发会话过期跳转；其他请求失败仍按 HTTP 状态与业务 code 分类，同一次失败只反馈一次。
+- [x] 当前会话的多个并发认证失效只清理会话、提示并跳转一次。
+- [x] 属于旧会话的请求无论成功或失败都不得覆盖或清除新会话；退出后的迟到响应不得恢复旧会话。
+- [x] 登录接口自身的错误留在登录表单，不触发会话过期跳转；其他请求失败仍按 HTTP 状态与业务 code 分类，同一次失败只反馈一次。
 
 ## Blocked by
 
@@ -34,3 +34,5 @@ blocked_by: ["session-restore"]
 ## Delivery notes
 
 请求层已有统一的认证头、成功解包与失败分类，本票在其上收敛认证失效的会话级行为。失效时不保留未提交表单、不重放写请求的页面级行为在[脏表单确认与失效清理](31-account-create-dirty.md)首次具备写入流程时验证。
+
+实现结果见[Resolution](../comments/expiry-handling.md#resolution)。
