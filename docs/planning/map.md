@@ -46,6 +46,8 @@ status: closed
 
 - [登录并进入工作台](issues/12-login-workbench.md) — 已交付登录、当前管理端账号初始化、受保护工作台、本地退出及自动检查；真实联调与浏览器人工验收仍待执行。
 
+- [抽取页面级测试初始化](issues/21-page-test-harness.md) — 已抽取集中的页面级测试初始化与自动清理，登录测试成功迁移且场景不减。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。

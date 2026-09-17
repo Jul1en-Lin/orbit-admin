@@ -1,28 +1,8 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { DOMWrapper, flushPromises } from '@vue/test-utils'
-import AxiosMockAdapter from 'axios-mock-adapter'
+import { describe, expect, it } from 'vitest'
+import { flushPromises } from '@vue/test-utils'
 import { nextTick } from 'vue'
-import { createOrbitApp } from '../src/main'
-import { apiClient } from '../src/api/client'
 import { encryptLoginPassword } from '../src/auth/password'
-
-const httpMock = new AxiosMockAdapter(apiClient)
-
-function mountApplication(initialPath = '/login') {
-  window.history.replaceState({}, '', initialPath)
-  const app = createOrbitApp()
-  const root = document.createElement('div')
-  document.body.appendChild(root)
-  app.mount(root)
-  const wrapper = new DOMWrapper(root)
-  return { app, wrapper, router: app.config.globalProperties.$router }
-}
-
-afterEach(() => {
-  httpMock.reset()
-  sessionStorage.clear()
-  document.body.innerHTML = ''
-})
+import { httpMock, mountApplication } from './harness'
 
 describe('login password compatibility', () => {
   it('matches the Java AES Hex vector', () => {
