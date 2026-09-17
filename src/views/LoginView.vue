@@ -34,7 +34,12 @@ function submitError(error: unknown): string {
 }
 
 function validRedirect(value: unknown): value is string {
-  return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//')
+  if (typeof value !== 'string') return false
+  if (!value.startsWith('/')) return false
+  if (value.startsWith('//')) return false
+  if (value.includes('\\')) return false
+  if (value.startsWith('/login')) return false
+  return true
 }
 
 async function retryAccount() {

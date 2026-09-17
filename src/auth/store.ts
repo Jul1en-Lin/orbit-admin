@@ -98,7 +98,12 @@ export const useAuthStore = defineStore('auth', {
         const currentRoute = router.currentRoute.value
         if (currentRoute.name !== 'login') {
           const redirect = currentRoute.fullPath
-          const isSafe = typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//')
+          const isSafe =
+            typeof redirect === 'string' &&
+            redirect.startsWith('/') &&
+            !redirect.startsWith('//') &&
+            !redirect.includes('\\') &&
+            !redirect.startsWith('/login')
           router
             .push({
               name: 'login',

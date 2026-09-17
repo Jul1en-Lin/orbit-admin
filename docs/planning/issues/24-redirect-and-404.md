@@ -3,8 +3,8 @@ id: redirect-and-404
 title: 回跳与 404 恢复入口
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: codex
 order: 24
 blocked_by: ["session-restore"]
 ---

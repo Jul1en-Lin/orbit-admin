@@ -52,6 +52,8 @@ status: closed
 
 - [统一认证失效与旧会话隔离](issues/23-expiry-handling.md) — 已交付并发 401 统一收敛清理与单次提示跳转、旧会话迟到响应严格隔离及登录表单自身错误留存。
 
+- [回跳与 404 恢复入口](issues/24-redirect-and-404.md) — 已交付回跳安全校验加固（拒绝协议相对、反斜线及回登录页目标）与 404 未知路由页面及返回默认页入口。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。
