@@ -56,6 +56,8 @@ status: closed
 
 - [管理端账号列表查询与筛选](issues/25-account-list-query.md) — 已交付管理端账号默认业务页、精确筛选与重置、导航启用及页面级测试。
 
+- [列表状态与最新响应](issues/26-account-list-states.md) — 已交付加载/空结果/失败重试状态区分、重新查询失败不留旧数据、最新响应竞态丢弃及焦点可见交互。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。

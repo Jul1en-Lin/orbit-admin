@@ -3,8 +3,8 @@ id: account-list-states
 title: 列表状态与最新响应
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: codex
 order: 26
 blocked_by: ["account-list-query"]
 ---
@@ -23,9 +23,9 @@ blocked_by: ["account-list-query"]
 
 ## Acceptance criteria
 
-- [ ] 区分加载、暂无数据与失败；失败留在当前页面并提供重试入口。
-- [ ] 重新查询失败不得把旧结果当作新结果展示；连续查询只接受最新一次响应。
-- [ ] 表格窄视口可横向滚动，仅用键盘可完成筛选，焦点可见；说明栏写明当前操作边界。
+- [x] 区分加载、暂无数据与失败；失败留在当前页面并提供重试入口。
+- [x] 重新查询失败不得把旧结果当作新结果展示；连续查询只接受最新一次响应。
+- [x] 表格窄视口可横向滚动，仅用键盘可完成筛选，焦点可见；说明栏写明当前操作边界。
 
 ## Blocked by
 

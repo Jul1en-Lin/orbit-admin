@@ -5,6 +5,9 @@ import { fetchAccountList, type SysUserVO } from '../api/account'
 
 const accounts = ref<SysUserVO[]>([])
 const loading = ref(false)
+const hasError = ref(false)
+const errorMessage = ref('')
+let querySeq = 0
 
 const filters = reactive({
   userId: '',
@@ -12,33 +15,55 @@ const filters = reactive({
   status: '',
 })
 
+const lastQueryParams = ref<{ userId?: string; phoneNumber?: string; status?: string }>({})
+
 async function loadAccounts(queryPayload?: { userId?: string; phoneNumber?: string; status?: string }) {
+  const currentSeq = ++querySeq
   loading.value = true
+  hasError.value = false
+  errorMessage.value = ''
+
   try {
-    accounts.value = await fetchAccountList(queryPayload)
-  } catch {
+    const result = await fetchAccountList(queryPayload)
+    if (currentSeq !== querySeq) {
+      return
+    }
+    accounts.value = result
+    loading.value = false
+  } catch (err: unknown) {
+    if (currentSeq !== querySeq) {
+      return
+    }
     accounts.value = []
-  } finally {
+    hasError.value = true
+    errorMessage.value = err instanceof Error && err.message ? err.message : '加载失败，请重试'
     loading.value = false
   }
 }
 
 function handleQuery() {
-  loadAccounts({
+  lastQueryParams.value = {
     userId: filters.userId,
     phoneNumber: filters.phoneNumber,
     status: filters.status,
-  })
+  }
+  loadAccounts(lastQueryParams.value)
 }
 
 function handleReset() {
   filters.userId = ''
   filters.phoneNumber = ''
   filters.status = ''
+  lastQueryParams.value = {}
   loadAccounts({})
 }
 
+function handleRetry() {
+  loadAccounts(lastQueryParams.value)
+}
+
 onMounted(() => {
+  lastQueryParams.value = {}
   loadAccounts({})
 })
 </script>
@@ -107,7 +132,22 @@ onMounted(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="account in accounts" :key="account.userId" data-test="account-row">
+                <tr v-if="loading" data-test="state-loading" class="state-row">
+                  <td colspan="6" class="cell-state is-loading">
+                    <span class="state-spinner" aria-hidden="true" />
+                    <span class="state-message">正在加载数据...</span>
+                  </td>
+                </tr>
+                <tr v-else-if="hasError" data-test="state-error" class="state-row is-error">
+                  <td colspan="6" class="cell-state is-error">
+                    <p class="state-message">{{ errorMessage || '数据加载失败，请重试' }}</p>
+                    <button type="button" data-test="state-retry" class="btn-retry" @click="handleRetry">重试</button>
+                  </td>
+                </tr>
+                <tr v-else-if="accounts.length === 0" data-test="state-empty" class="state-row is-empty">
+                  <td colspan="6" class="cell-state is-empty">暂无数据</td>
+                </tr>
+                <tr v-for="account in accounts" v-else :key="account.userId" data-test="account-row">
                   <td class="cell-id">{{ account.userId }}</td>
                   <td class="cell-phone">{{ account.phoneNumber }}</td>
                   <td class="cell-nickname">{{ account.nickName }}</td>
@@ -123,7 +163,9 @@ onMounted(() => {
             </table>
           </div>
 
-          <p v-if="accounts.length > 0" class="list-summary">已显示全部 {{ accounts.length }} 个账号</p>
+          <p v-if="!loading && !hasError && accounts.length > 0" class="list-summary">
+            已显示全部 {{ accounts.length }} 个账号
+          </p>
         </section>
 
         <aside class="accounts-rail" aria-label="当前操作边界">
@@ -235,9 +277,14 @@ onMounted(() => {
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s ease;
+  outline-offset: 2px;
 
   &:hover {
     opacity: 0.9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
   }
 }
 
@@ -248,9 +295,36 @@ onMounted(() => {
   background: transparent;
   color: var(--orbit-ink);
   cursor: pointer;
+  outline-offset: 2px;
 
   &:hover {
     background: var(--orbit-paper);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+}
+
+.btn-retry {
+  display: inline-block;
+  padding: 0.4rem 1.25rem;
+  border: 0;
+  background: var(--orbit-orange);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline-offset: 2px;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
   }
 }
 
@@ -261,6 +335,7 @@ onMounted(() => {
 
 .account-table {
   width: 100%;
+  min-width: 640px;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.88rem;
@@ -321,6 +396,30 @@ onMounted(() => {
   line-height: 1.5;
   word-break: break-all;
   white-space: normal;
+}
+
+.cell-state {
+  padding: 3.5rem 1rem !important;
+  text-align: center;
+  color: var(--orbit-body-muted);
+  background: var(--orbit-paper);
+  font-size: 0.9rem;
+
+  &.is-error {
+    color: var(--orbit-ink);
+
+    .state-message {
+      color: #b33a2b;
+    }
+  }
+
+  .state-message {
+    margin: 0 0 0.75rem;
+  }
+
+  &.is-empty {
+    color: var(--orbit-body-muted);
+  }
 }
 
 .list-summary {
