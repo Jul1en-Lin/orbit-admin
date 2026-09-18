@@ -101,6 +101,28 @@ describe('management account list and query (account-list-query)', () => {
       data: { nickName: '林舟', userId: 1001, phoneNumber: '13800001001', identity: 'super_admin', status: 'enable' },
     })
 
+    httpMock.onGet('/dictionary_data/list').reply((config) => {
+      const typeKey = config.params?.typeKey
+      if (typeKey === 'common_status') {
+        return [
+          200,
+          {
+            code: 200000,
+            msg: '操作成功',
+            data: {
+              totals: 2,
+              totalPages: 1,
+              list: [
+                { id: 1, typeKey: 'common_status', dataKey: 'enable', value: '启用', sort: 1, status: 1 },
+                { id: 2, typeKey: 'common_status', dataKey: 'disable', value: '停用', sort: 2, status: 1 },
+              ],
+            },
+          },
+        ]
+      }
+      return [200, { code: 200000, msg: '操作成功', data: { totals: 0, totalPages: 1, list: [] } }]
+    })
+
     let lastListPayload: Record<string, unknown> | null = null
     httpMock.onPost('/sys_user/list').reply((config) => {
       lastListPayload = config.data ? JSON.parse(config.data) : {}
@@ -172,6 +194,28 @@ describe('management account list and query (account-list-query)', () => {
       code: 200000,
       msg: '操作成功',
       data: { nickName: '林舟', userId: 1001, phoneNumber: '13800001001', identity: 'super_admin', status: 'enable' },
+    })
+
+    httpMock.onGet('/dictionary_data/list').reply((config) => {
+      const typeKey = config.params?.typeKey
+      if (typeKey === 'common_status') {
+        return [
+          200,
+          {
+            code: 200000,
+            msg: '操作成功',
+            data: {
+              totals: 2,
+              totalPages: 1,
+              list: [
+                { id: 1, typeKey: 'common_status', dataKey: 'enable', value: '启用', sort: 1, status: 1 },
+                { id: 2, typeKey: 'common_status', dataKey: 'disable', value: '停用', sort: 2, status: 1 },
+              ],
+            },
+          },
+        ]
+      }
+      return [200, { code: 200000, msg: '操作成功', data: { totals: 0, totalPages: 1, list: [] } }]
     })
 
     let lastListPayload: Record<string, unknown> | null = null

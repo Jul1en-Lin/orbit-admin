@@ -3,8 +3,8 @@ id: status-dictionary
 title: 身份与状态字典读取
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: Jul1en-Lin
 order: 27
 blocked_by: ["account-list-query"]
 ---
@@ -23,9 +23,9 @@ blocked_by: ["account-list-query"]
 
 ## Acceptance criteria
 
-- [ ] 完整读取管理端身份与通用状态两个 typeKey 的字典项所有分页，以 dataKey 对应展示值；不硬编码候选，不调用内部接口。
-- [ ] 字典加载失败明确反馈且可重试；不虚构编码，选项缺失时不以默认值代替。
-- [ ] 未知编码展示原始值且不丢弃记录；管理端账号的字符串状态与字典记录的数值状态不混用。
+- [x] 完整读取管理端身份与通用状态两个 typeKey 的字典项所有分页，以 dataKey 对应展示值；不硬编码候选，不调用内部接口。
+- [x] 字典加载失败明确反馈且可重试；不虚构编码，选项缺失时不以默认值代替。
+- [x] 未知编码展示原始值且不丢弃记录；管理端账号的字符串状态与字典记录的数值状态不混用。
 
 ## Blocked by
 

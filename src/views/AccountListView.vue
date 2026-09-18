@@ -1,13 +1,21 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import AppShell from '../components/AppShell.vue'
 import { fetchAccountList, type SysUserVO } from '../api/account'
+import { fetchAccountDictionaries, type DictDataVO } from '../api/dict'
 
 const accounts = ref<SysUserVO[]>([])
 const loading = ref(false)
 const hasError = ref(false)
 const errorMessage = ref('')
 let querySeq = 0
+
+// Dictionary state
+const identityDict = ref<DictDataVO[]>([])
+const statusDict = ref<DictDataVO[]>([])
+const dictLoading = ref(false)
+const dictError = ref(false)
+const dictErrorMessage = ref('')
 
 const filters = reactive({
   userId: '',
@@ -16,6 +24,63 @@ const filters = reactive({
 })
 
 const lastQueryParams = ref<{ userId?: string; phoneNumber?: string; status?: string }>({})
+
+// Status options for filter select derived dynamically from common_status dictionary
+const statusOptions = computed(() => {
+  const seen = new Set<string>()
+  const options: { dataKey: string; value: string }[] = []
+  for (const item of statusDict.value) {
+    if (!seen.has(item.dataKey)) {
+      seen.add(item.dataKey)
+      options.push({ dataKey: item.dataKey, value: item.value })
+    }
+  }
+  return options
+})
+
+// Mappings for table display (dataKey -> value)
+const identityDictMap = computed(() => {
+  const map = new Map<string, string>()
+  for (const item of identityDict.value) {
+    map.set(item.dataKey, item.value)
+  }
+  return map
+})
+
+const statusDictMap = computed(() => {
+  const map = new Map<string, string>()
+  for (const item of statusDict.value) {
+    map.set(item.dataKey, item.value)
+  }
+  return map
+})
+
+function getIdentityLabel(identity: string): string {
+  if (!identity) return ''
+  return identityDictMap.value.get(identity) ?? identity
+}
+
+function getStatusLabel(status: string): string {
+  if (!status) return ''
+  return statusDictMap.value.get(status) ?? status
+}
+
+async function loadDictionaries(): Promise<void> {
+  dictLoading.value = true
+  dictError.value = false
+  dictErrorMessage.value = ''
+
+  try {
+    const { admin, common_status } = await fetchAccountDictionaries()
+    identityDict.value = admin
+    statusDict.value = common_status
+    dictLoading.value = false
+  } catch (err: unknown) {
+    dictError.value = true
+    dictErrorMessage.value = err instanceof Error && err.message ? err.message : '字典数据加载失败，当前显示原始编码。'
+    dictLoading.value = false
+  }
+}
 
 async function loadAccounts(queryPayload?: { userId?: string; phoneNumber?: string; status?: string }) {
   const currentSeq = ++querySeq
@@ -59,11 +124,15 @@ function handleReset() {
 }
 
 function handleRetry() {
+  if (dictError.value) {
+    loadDictionaries()
+  }
   loadAccounts(lastQueryParams.value)
 }
 
 onMounted(() => {
   lastQueryParams.value = {}
+  loadDictionaries()
   loadAccounts({})
 })
 </script>
@@ -79,6 +148,22 @@ onMounted(() => {
 
       <div class="accounts-split">
         <section class="accounts-main" aria-labelledby="accounts-title">
+          <div v-if="dictError" class="dict-alert" data-test="dict-alert" role="alert">
+            <div class="dict-alert-content">
+              <span class="dict-alert-icon" aria-hidden="true">!</span>
+              <p class="dict-alert-message">{{ dictErrorMessage || '字典数据加载失败，当前显示原始编码。' }}</p>
+            </div>
+            <button
+              type="button"
+              class="btn-dict-retry"
+              data-test="dict-retry"
+              :disabled="dictLoading"
+              @click="loadDictionaries"
+            >
+              {{ dictLoading ? '重试中...' : '重试字典' }}
+            </button>
+          </div>
+
           <form class="filters-form" @submit.prevent="handleQuery">
             <div class="filter-field">
               <label for="filter-user-id">账号 ID</label>
@@ -108,8 +193,14 @@ onMounted(() => {
               <label for="filter-status">状态</label>
               <select id="filter-status" v-model="filters.status" data-test="filter-status">
                 <option value="">全部状态</option>
-                <option value="enable">启用</option>
-                <option value="disable">停用</option>
+                <option
+                  v-for="item in statusOptions"
+                  :key="item.dataKey"
+                  :value="item.dataKey"
+                  :data-test="`status-option-${item.dataKey}`"
+                >
+                  {{ item.value }}
+                </option>
               </select>
             </div>
 
@@ -151,10 +242,10 @@ onMounted(() => {
                   <td class="cell-id">{{ account.userId }}</td>
                   <td class="cell-phone">{{ account.phoneNumber }}</td>
                   <td class="cell-nickname">{{ account.nickName }}</td>
-                  <td class="cell-identity">{{ account.identity }}</td>
+                  <td class="cell-identity">{{ getIdentityLabel(account.identity) }}</td>
                   <td class="cell-status">
                     <span :class="['status-badge', account.status === 'disable' ? 'is-disabled' : 'is-enabled']">
-                      {{ account.status }}
+                      {{ getStatusLabel(account.status) }}
                     </span>
                   </td>
                   <td class="cell-remark">{{ account.remark || '—' }}</td>
@@ -223,6 +314,70 @@ onMounted(() => {
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 3rem;
   align-items: start;
+}
+
+.dict-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #d9534f;
+  background: rgba(217, 83, 79, 0.08);
+  border-radius: 2px;
+}
+
+.dict-alert-content {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.dict-alert-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: #d9534f;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.dict-alert-message {
+  margin: 0;
+  color: var(--orbit-ink);
+  font-size: 0.85rem;
+}
+
+.btn-dict-retry {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: var(--orbit-paper);
+  color: var(--orbit-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline-offset: 2px;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--orbit-orange);
+    border-color: var(--orbit-orange);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 }
 
 .filters-form {
