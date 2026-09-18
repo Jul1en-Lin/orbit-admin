@@ -97,7 +97,11 @@ async function loadDictionaries(): Promise<void> {
   }
 }
 
-async function loadAccounts(queryPayload?: { userId?: string; phoneNumber?: string; status?: string }) {
+async function loadAccounts(queryPayload?: {
+  userId?: string
+  phoneNumber?: string
+  status?: string
+}): Promise<boolean> {
   const currentSeq = ++querySeq
   loading.value = true
   hasError.value = false
@@ -106,22 +110,25 @@ async function loadAccounts(queryPayload?: { userId?: string; phoneNumber?: stri
   try {
     const result = await fetchAccountList(queryPayload)
     if (currentSeq !== querySeq) {
-      return
+      return false
     }
     accounts.value = result
     loading.value = false
+    return true
   } catch (err: unknown) {
     if (currentSeq !== querySeq) {
-      return
+      return false
     }
     accounts.value = []
     hasError.value = true
     errorMessage.value = err instanceof Error && err.message ? err.message : '加载失败，请重试'
     loading.value = false
+    return false
   }
 }
 
 function handleQuery() {
+  refreshFailureNotice.value = ''
   lastQueryParams.value = {
     userId: filters.userId,
     phoneNumber: filters.phoneNumber,
@@ -131,6 +138,7 @@ function handleQuery() {
 }
 
 function handleReset() {
+  refreshFailureNotice.value = ''
   filters.userId = ''
   filters.phoneNumber = ''
   filters.status = ''
@@ -138,17 +146,22 @@ function handleReset() {
   loadAccounts({})
 }
 
-function handleRetry() {
+async function handleRetry() {
   if (dictError.value) {
     loadDictionaries()
   }
-  loadAccounts(lastQueryParams.value)
+  const ok = await loadAccounts(lastQueryParams.value)
+  if (ok) {
+    refreshFailureNotice.value = ''
+  }
 }
 
 // Create account dialog state
 const createDialogVisible = ref(false)
 const createSubmitting = ref(false)
 const createErrorMessage = ref('')
+const isCreateUncertain = ref(false)
+const refreshFailureNotice = ref('')
 
 const PASSWORD_REGEX = /^[a-zA-Z0-9]+$/
 
@@ -286,6 +299,7 @@ function resetCreateForm() {
   createForm.status = ''
   createForm.remark = ''
   createErrorMessage.value = ''
+  isCreateUncertain.value = false
   createFieldErrors.identity = ''
   createFieldErrors.phoneNumber = ''
   createFieldErrors.password = ''
@@ -299,6 +313,7 @@ function resetCreateForm() {
 }
 
 function openCreateDialog() {
+  refreshFailureNotice.value = ''
   resetCreateForm()
   createDialogVisible.value = true
 }
@@ -331,6 +346,38 @@ const isCreateFormFilled = computed(() => {
 
 const isCreateFormValid = computed(() => isCreateFormFilled.value)
 
+function isUncertainWriteError(err: unknown): boolean {
+  if (err instanceof ApiError) {
+    if (err.kind === 'timeout' || err.isTimeout) {
+      return true
+    }
+    if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || err.code === 'ERR_CANCELED') {
+      return true
+    }
+    if (typeof err.message === 'string' && /timeout|超时|abort|canceled/i.test(err.message)) {
+      return true
+    }
+  }
+  if (err && typeof err === 'object') {
+    const record = err as Record<string, unknown>
+    if (record.kind === 'timeout' || record.isTimeout === true) {
+      return true
+    }
+    if (
+      record.code === 'ECONNABORTED' ||
+      record.code === 'ETIMEDOUT' ||
+      record.code === 'ERR_CANCELED' ||
+      record.code === 'ECONNRESET'
+    ) {
+      return true
+    }
+    if (typeof record.message === 'string' && /timeout|超时|abort|canceled|econnreset/i.test(record.message)) {
+      return true
+    }
+  }
+  return false
+}
+
 async function handleCreateSubmit() {
   if (dictError.value || dictLoading.value) {
     return
@@ -347,6 +394,8 @@ async function handleCreateSubmit() {
 
   createSubmitting.value = true
   createErrorMessage.value = ''
+  isCreateUncertain.value = false
+  refreshFailureNotice.value = ''
 
   try {
     await createAccount({
@@ -357,12 +406,11 @@ async function handleCreateSubmit() {
       status: createForm.status,
       remark: createForm.remark.trim() ? createForm.remark.trim() : undefined,
     })
-
-    createDialogVisible.value = false
-    resetCreateForm()
-    await loadAccounts(lastQueryParams.value)
   } catch (err: unknown) {
-    if (err instanceof ApiError) {
+    if (isUncertainWriteError(err)) {
+      isCreateUncertain.value = true
+      createErrorMessage.value = '提交结果未确认，请先查询核实'
+    } else if (err instanceof ApiError) {
       if (err.kind === 'network') {
         createErrorMessage.value = '网络请求失败，请稍后重试'
       } else if (err.serverMessage) {
@@ -377,8 +425,25 @@ async function handleCreateSubmit() {
     } else {
       createErrorMessage.value = '创建账号失败，请重试'
     }
+    return
   } finally {
     createSubmitting.value = false
+  }
+
+  createDialogVisible.value = false
+  resetCreateForm()
+
+  let refreshOk: boolean
+  try {
+    refreshOk = await loadAccounts(lastQueryParams.value)
+  } catch (refreshErr: unknown) {
+    refreshOk = false
+    hasError.value = true
+    errorMessage.value = refreshErr instanceof Error && refreshErr.message ? refreshErr.message : '加载失败，请重试'
+  }
+
+  if (!refreshOk || hasError.value) {
+    refreshFailureNotice.value = '账号创建成功，但列表刷新失败。请通过下方表格重试刷新查看最新数据，无需重复提交保存。'
   }
 }
 
@@ -413,6 +478,23 @@ onMounted(() => {
               @click="loadDictionaries"
             >
               {{ dictLoading ? '重试中...' : '重试字典' }}
+            </button>
+          </div>
+
+          <div v-if="refreshFailureNotice" class="refresh-notice-alert" data-test="create-refresh-warning" role="alert">
+            <div class="refresh-notice-content">
+              <span class="refresh-notice-icon" aria-hidden="true">!</span>
+              <p class="refresh-notice-text" data-test="refresh-failure-notice">
+                {{ refreshFailureNotice }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="btn-notice-dismiss"
+              data-test="btn-dismiss-refresh-notice"
+              @click="refreshFailureNotice = ''"
+            >
+              知道了
             </button>
           </div>
 
@@ -693,9 +775,17 @@ onMounted(() => {
               />
             </div>
 
-            <div v-if="createErrorMessage" class="create-error-message" data-test="create-error-message" role="alert">
+            <div
+              v-if="createErrorMessage"
+              class="create-error-message"
+              data-test="create-error-message"
+              :class="{ 'is-uncertain': isCreateUncertain }"
+              role="alert"
+            >
               <span class="create-error-icon" aria-hidden="true">!</span>
-              <span class="create-error-text">{{ createErrorMessage }}</span>
+              <span class="create-error-text" :data-test="isCreateUncertain ? 'create-uncertain-warning' : undefined">{{
+                createErrorMessage
+              }}</span>
             </div>
 
             <div class="dialog-actions">
@@ -801,6 +891,65 @@ onMounted(() => {
   margin: 0;
   color: var(--orbit-ink);
   font-size: 0.85rem;
+}
+
+.refresh-notice-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #d97706;
+  background: rgba(217, 119, 6, 0.08);
+  border-radius: 2px;
+}
+
+.refresh-notice-content {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.refresh-notice-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: #d97706;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.refresh-notice-text {
+  margin: 0;
+  color: var(--orbit-ink);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.btn-notice-dismiss {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: var(--orbit-paper);
+  color: var(--orbit-ink);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
 }
 
 .btn-dict-retry {
@@ -1210,6 +1359,17 @@ onMounted(() => {
   border-left: 3px solid #d9534f;
   color: #d9534f;
   font-size: 0.85rem;
+
+  &.is-uncertain {
+    background: rgba(217, 119, 6, 0.1);
+    border-left: 3px solid #d97706;
+    color: #92400e;
+
+    .create-error-icon {
+      background: #d97706;
+      color: #fff;
+    }
+  }
 }
 
 .create-error-icon {

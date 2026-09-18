@@ -9,15 +9,16 @@ declare module 'axios' {
   }
 }
 
-export type ApiErrorKind = 'http' | 'business' | 'network'
+export type ApiErrorKind = 'http' | 'business' | 'network' | 'timeout'
 
 export class ApiError extends Error {
   constructor(
     message: string,
     public readonly kind: ApiErrorKind,
     public readonly status?: number,
-    public readonly code?: number,
+    public readonly code?: number | string,
     public readonly serverMessage?: string,
+    public readonly isTimeout?: boolean,
   ) {
     super(message)
     this.name = 'ApiError'
@@ -92,6 +93,26 @@ apiClient.interceptors.response.use(
   },
   (error: AxiosError<ApiEnvelope<unknown>>) => {
     if (!error.response) {
+      const isTimeout =
+        error.code === 'ECONNABORTED' ||
+        error.code === 'ETIMEDOUT' ||
+        Boolean(error.message && /timeout|超时/i.test(error.message))
+      const isCanceled =
+        error.code === 'ERR_CANCELED' ||
+        error.name === 'CanceledError' ||
+        Boolean(error.message && /abort|canceled/i.test(error.message))
+
+      if (isTimeout || isCanceled) {
+        throw new ApiError(
+          isTimeout ? '请求超时' : '请求已取消',
+          'timeout',
+          undefined,
+          error.code ?? (isTimeout ? 'ECONNABORTED' : 'ERR_CANCELED'),
+          undefined,
+          true,
+        )
+      }
+
       throw new ApiError('网络请求失败', 'network')
     }
 

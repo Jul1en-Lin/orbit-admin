@@ -64,6 +64,8 @@ status: closed
 
 - [校验、防重复与失败反馈](issues/29-account-create-validation.md) — 已交付提交前字段与密码格式校验、提交中防重复请求与弹窗关闭锁定，以及失败保留已填输入与单次反馈。
 
+- [写入结果不确定与刷新失败](issues/30-account-create-uncertain.md) — 已交付超时等未收到明确结果时保留输入、解锁并提示「提交结果未确认，请先查询核实」，以及写入成功但刷新失败分别说明两者、不诱导再次保存。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。

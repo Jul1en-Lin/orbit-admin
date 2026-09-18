@@ -3,8 +3,8 @@ id: account-create-uncertain
 title: 写入结果不确定与刷新失败
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: Jul1en-Lin
 order: 30
 blocked_by: ["account-create-dialog"]
 ---
@@ -23,8 +23,8 @@ blocked_by: ["account-create-dialog"]
 
 ## Acceptance criteria
 
-- [ ] 超时等未收到明确结果时保留输入、解除提交锁定，提示「提交结果未确认，请先查询核实」，不自动重试，不宣称绝对防重复写入。
-- [ ] 写入成功但列表刷新失败时分别说明两者，不诱导再次保存。
+- [x] 超时等未收到明确结果时保留输入、解除提交锁定，提示「提交结果未确认，请先查询核实」，不自动重试，不宣称绝对防重复写入。
+- [x] 写入成功但列表刷新失败时分别说明两者，不诱导再次保存。
 
 ## Blocked by
 
