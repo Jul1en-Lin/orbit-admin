@@ -3,8 +3,8 @@ id: dev-proxy-config
 title: 本地代理与构建时配置
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: Jul1en-Lin
 order: 40
 blocked_by: ["session-restore"]
 ---
@@ -23,8 +23,8 @@ blocked_by: ["session-restore"]
 
 ## Acceptance criteria
 
-- [ ] 浏览器统一访问同源 `/api`；本地开发代理将其替换为网关路径，网关目标可配置。
-- [ ] 采用构建时配置，不引入运行时配置加载器。
+- [x] 浏览器统一访问同源 `/api`；本地开发代理将其替换为网关路径，网关目标可配置。
+- [x] 采用构建时配置，不引入运行时配置加载器。
 - [ ] 通过实际请求观察核实路径语义与认证头转发，不绕过网关直连业务服务。
 
 ## Blocked by
