@@ -3,8 +3,8 @@ id: nginx-hosting
 title: Nginx 静态托管与路由回退
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: worker
 order: 41
 blocked_by: ["dev-proxy-config"]
 ---
@@ -23,9 +23,9 @@ blocked_by: ["dev-proxy-config"]
 
 ## Acceptance criteria
 
-- [ ] 提供 Nginx 配置示例：站点根路径托管静态产物，路由使用 history 模式，并将同源 `/api` 代理到网关。
-- [ ] 有效深层页面刷新可加载应用；API 请求与缺失静态资源不得回退为页面 HTML。
-- [ ] 在可控本地环境验证静态产物、页面刷新、API 代理与错误资源响应；如使用模拟 upstream 仅用于证明转发规则，不冒充真实联调，不搭建完整模拟后端。
+- [x] 提供 Nginx 配置示例：站点根路径托管静态产物，路由使用 history 模式，并将同源 `/api` 代理到网关。
+- [x] 有效深层页面刷新可加载应用；API 请求与缺失静态资源不得回退为页面 HTML。
+- [x] 在可控本地环境验证静态产物、页面刷新、API 代理与错误资源响应；如使用模拟 upstream 仅用于证明转发规则，不冒充真实联调，不搭建完整模拟后端。
 
 ## Blocked by
 

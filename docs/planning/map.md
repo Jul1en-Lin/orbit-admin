@@ -86,6 +86,8 @@ status: closed
 
 - [本地代理与构建时配置](issues/40-dev-proxy-config.md) — 已交付 Vite 开发代理将同源 /api 重写为网关 /admin、可配置网关目标及构建时环境变量配置；实际联调待后端启动后核实。
 
+- [Nginx 静态托管与路由回退](issues/41-nginx-hosting.md) — 已交付 Nginx 站点与主配置示例、history 模式路由回退、静态资源 404 隔离与同源 /api 网关代理，并通过受控本地测试验证。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。
