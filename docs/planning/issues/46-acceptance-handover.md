@@ -3,8 +3,8 @@ id: acceptance-handover
 title: 缺陷回归与验收记录交接
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: worker
 order: 46
 blocked_by: ["backend-integration", "browser-acceptance"]
 ---
@@ -23,9 +23,9 @@ blocked_by: ["backend-integration", "browser-acceptance"]
 
 ## Acceptance criteria
 
-- [ ] 发现缺陷先复现；适用时在既有高层测试边界补回归测试，修复后重跑相关及完整检查；不新增范围外功能。
-- [ ] 验收记录逐项标明通过、失败、未验收及依据，区分自动化、真实后端、人工浏览器与上线部署；环境缺失不得替换为模拟通过或静默跳过。
-- [ ] 交接说明剩余事项与阻碍；有缺陷或必需验证未完成时，不将完整首版验收标为通过；实际发布、共享环境变更及破坏性清理须另获授权。
+- [x] 发现缺陷先复现；适用时在既有高层测试边界补回归测试，修复后重跑相关及完整检查；不新增范围外功能。
+- [x] 验收记录逐项标明通过、失败、未验收及依据，区分自动化、真实后端、人工浏览器与上线部署；环境缺失不得替换为模拟通过或静默跳过。
+- [x] 交接说明剩余事项与阻碍；有缺陷或必需验证未完成时，不将完整首版验收标为通过；实际发布、共享环境变更及破坏性清理须另获授权。
 
 ## Blocked by
 

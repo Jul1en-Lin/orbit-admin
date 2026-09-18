@@ -96,6 +96,8 @@ status: closed
 
 - [浏览器人工验收与部署证据](issues/45-browser-acceptance.md) — 已核实真实 Chrome 153 与 Edge 缺失记录，完成主题浮层/中文排版/窄视口/键盘焦点验收，并汇总同源代理与 Nginx 回退部署证据。
 
+- [缺陷回归与验收记录交接](issues/46-acceptance-handover.md) — 已汇总结算全维度验收记录与未验收阻碍，明确后续联调 Runbook 与授权边界，并将首版验收完整关闭权移交用户。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。
