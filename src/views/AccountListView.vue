@@ -1,10 +1,14 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
 import { ElDialog } from 'element-plus'
 import AppShell from '../components/AppShell.vue'
 import { createAccount, fetchAccountList, type SysUserVO } from '../api/account'
 import { fetchAccountDictionaries, type DictDataVO } from '../api/dict'
 import { ApiError } from '../api/client'
+import { useAuthStore } from '../auth/store'
+
+const auth = useAuthStore()
 
 const accounts = ref<SysUserVO[]>([])
 const loading = ref(false)
@@ -322,6 +326,9 @@ function closeCreateDialog() {
   if (createSubmitting.value) {
     return
   }
+  if (!confirmDiscardChanges()) {
+    return
+  }
   createDialogVisible.value = false
   resetCreateForm()
 }
@@ -330,9 +337,68 @@ function handleDialogBeforeClose(done: () => void) {
   if (createSubmitting.value) {
     return
   }
+  if (!confirmDiscardChanges()) {
+    return
+  }
   resetCreateForm()
   done()
 }
+
+const CONFIRM_DISCARD_MESSAGE = '表单有未保存的修改，确定放弃吗？'
+
+const isCreateFormDirty = computed(() => {
+  return (
+    createForm.identity !== '' ||
+    createForm.phoneNumber !== '' ||
+    createForm.password !== '' ||
+    createForm.nickName !== '' ||
+    createForm.status !== '' ||
+    createForm.remark !== ''
+  )
+})
+
+function confirmDiscardChanges(): boolean {
+  if (!isCreateFormDirty.value) {
+    return true
+  }
+  // eslint-disable-next-line no-undef
+  return window.confirm(CONFIRM_DISCARD_MESSAGE)
+}
+
+onBeforeRouteLeave(() => {
+  if (!auth.isAuthenticated || auth.sessionExpired) {
+    createDialogVisible.value = false
+    resetCreateForm()
+    return true
+  }
+
+  if (createDialogVisible.value && isCreateFormDirty.value) {
+    const ok = confirmDiscardChanges()
+    if (!ok) {
+      return false
+    }
+    createDialogVisible.value = false
+    resetCreateForm()
+    return true
+  }
+
+  if (createDialogVisible.value) {
+    createDialogVisible.value = false
+    resetCreateForm()
+  }
+
+  return true
+})
+
+watch(
+  () => [auth.accessToken, auth.sessionExpired, auth.isAuthenticated],
+  () => {
+    if (!auth.isAuthenticated || auth.sessionExpired) {
+      createDialogVisible.value = false
+      resetCreateForm()
+    }
+  },
+)
 
 const isCreateFormFilled = computed(() => {
   return (
@@ -407,6 +473,11 @@ async function handleCreateSubmit() {
       remark: createForm.remark.trim() ? createForm.remark.trim() : undefined,
     })
   } catch (err: unknown) {
+    if (err instanceof ApiError && err.status === 401) {
+      createDialogVisible.value = false
+      resetCreateForm()
+      return
+    }
     if (isUncertainWriteError(err)) {
       isCreateUncertain.value = true
       createErrorMessage.value = '提交结果未确认，请先查询核实'

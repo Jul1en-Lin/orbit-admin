@@ -37,4 +37,7 @@ export function resetTestHarness(): void {
   sessionStorage.clear()
   document.body.innerHTML = ''
   resetAuthSession()
+  if (typeof window !== 'undefined') {
+    window.confirm = () => true
+  }
 }

@@ -3,8 +3,8 @@ id: account-create-dirty
 title: 脏表单确认与失效清理
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: Jul1en-Lin
 order: 31
 blocked_by: ["account-create-dialog"]
 ---
@@ -23,9 +23,9 @@ blocked_by: ["account-create-dialog"]
 
 ## Acceptance criteria
 
-- [ ] 修改过的表单在取消、关闭或站内导航时需确认放弃；未修改的表单可直接关闭。
-- [ ] 认证失效可直接清理，不保留未提交表单，且不重放新增或修改请求。
-- [ ] 不增加浏览器关闭拦截，也不持久化表单数据。
+- [x] 修改过的表单在取消、关闭或站内导航时需确认放弃；未修改的表单可直接关闭。
+- [x] 认证失效可直接清理，不保留未提交表单，且不重放新增或修改请求。
+- [x] 不增加浏览器关闭拦截，也不持久化表单数据。
 
 ## Blocked by
 

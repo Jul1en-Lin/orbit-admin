@@ -66,6 +66,8 @@ status: closed
 
 - [写入结果不确定与刷新失败](issues/30-account-create-uncertain.md) — 已交付超时等未收到明确结果时保留输入、解锁并提示「提交结果未确认，请先查询核实」，以及写入成功但刷新失败分别说明两者、不诱导再次保存。
 
+- [脏表单确认与失效清理](issues/31-account-create-dirty.md) — 已交付修改过的表单在取消、关闭或站内导航前确认放弃、未修改直接关闭，以及认证失效直接清理未提交内容且不重放写请求。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。
