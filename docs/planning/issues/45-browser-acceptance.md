@@ -3,8 +3,8 @@ id: browser-acceptance
 title: 浏览器人工验收与部署证据
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: worker
 order: 45
 blocked_by: ["backend-integration"]
 ---
@@ -23,9 +23,9 @@ blocked_by: ["backend-integration"]
 
 ## Acceptance criteria
 
-- [ ] 在桌面 Chrome、Edge 当前稳定版记录实际版本，验收真实组件库的主题与浮层、中文排版、长文本与窄视口下主要操作可达性。
-- [ ] 验收可见焦点、键盘主流程、弹窗焦点循环以及关闭弹窗后的焦点恢复。
-- [ ] 汇总部署证据：同源路径与认证头、深层页面刷新、API 与缺失资源不回退页面；生产 upstream、域名与 HTTPS 未实测时保持未验收。
+- [x] 在桌面 Chrome、Edge 当前稳定版记录实际版本，验收真实组件库的主题与浮层、中文排版、长文本与窄视口下主要操作可达性。
+- [x] 验收可见焦点、键盘主流程、弹窗焦点循环以及关闭弹窗后的焦点恢复。
+- [x] 汇总部署证据：同源路径与认证头、深层页面刷新、API 与缺失资源不回退页面；生产 upstream、域名与 HTTPS 未实测时保持未验收。
 
 ## Blocked by
 

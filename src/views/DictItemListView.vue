@@ -539,7 +539,7 @@ defineExpose({
         <p class="section-kicker">DICTIONARY / {{ typeKey }}</p>
         <h1 id="dict-items-title">字典项</h1>
         <p class="intro-copy">
-          当前所属字典类型：<strong data-test="parent-type-key">{{ typeKey }}</strong>
+          当前所属字典类型：<strong class="parent-type-key" data-test="parent-type-key">{{ typeKey }}</strong>
         </p>
       </header>
 
@@ -862,6 +862,15 @@ defineExpose({
   color: var(--orbit-body-muted);
   font-size: 1.1rem;
   line-height: 1.7;
+}
+
+.parent-type-key {
+  display: inline-block;
+  max-width: 20rem;
+  vertical-align: bottom;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dict-items-split {
