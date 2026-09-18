@@ -9,6 +9,9 @@ const loading = ref(false)
 const hasError = ref(false)
 const errorMessage = ref('')
 const totals = ref(0)
+const totalPages = ref(0)
+const pageNo = ref(1)
+const pageSize = ref(10)
 let querySeq = 0
 
 const filters = reactive({
@@ -22,7 +25,11 @@ function getStatusLabel(status: number): string {
   return status === 1 ? '启用' : '停用'
 }
 
-async function loadDictTypes(queryPayload?: { typeKey?: string; value?: string }): Promise<boolean> {
+async function loadDictTypes(
+  queryPayload?: { typeKey?: string; value?: string },
+  targetPageNo: number = pageNo.value,
+  targetPageSize: number = pageSize.value,
+): Promise<boolean> {
   const currentSeq = ++querySeq
   loading.value = true
   hasError.value = false
@@ -30,8 +37,8 @@ async function loadDictTypes(queryPayload?: { typeKey?: string; value?: string }
 
   try {
     const result = await fetchDictTypeList({
-      pageNo: 1,
-      pageSize: 10,
+      pageNo: targetPageNo,
+      pageSize: targetPageSize,
       typeKey: queryPayload?.typeKey,
       value: queryPayload?.value,
     })
@@ -40,6 +47,9 @@ async function loadDictTypes(queryPayload?: { typeKey?: string; value?: string }
     }
     dictTypes.value = result?.list ?? []
     totals.value = result?.totals ?? 0
+    totalPages.value = result?.totalPages ?? 0
+    pageNo.value = targetPageNo
+    pageSize.value = targetPageSize
     loading.value = false
     return true
   } catch (err: unknown) {
@@ -47,6 +57,8 @@ async function loadDictTypes(queryPayload?: { typeKey?: string; value?: string }
       return false
     }
     dictTypes.value = []
+    totals.value = 0
+    totalPages.value = 0
     hasError.value = true
     if (err instanceof ApiError && err.serverMessage) {
       errorMessage.value = err.serverMessage
@@ -61,29 +73,77 @@ async function loadDictTypes(queryPayload?: { typeKey?: string; value?: string }
 }
 
 function handleQuery() {
+  pageNo.value = 1
   lastQueryParams.value = {
     typeKey: filters.typeKey,
     value: filters.value,
   }
-  loadDictTypes(lastQueryParams.value)
+  loadDictTypes(lastQueryParams.value, 1, pageSize.value)
 }
 
 function handleReset() {
   filters.typeKey = ''
   filters.value = ''
   lastQueryParams.value = {}
-  loadDictTypes({})
+  pageNo.value = 1
+  loadDictTypes({}, 1, pageSize.value)
+}
+
+function handlePageSizeChange(newSize?: number) {
+  if (typeof newSize === 'number' && !Number.isNaN(newSize) && newSize > 0) {
+    pageSize.value = newSize
+  }
+  pageNo.value = 1
+  loadDictTypes(lastQueryParams.value, 1, pageSize.value)
+}
+
+function handlePageChange(newPageNo: number) {
+  if (newPageNo < 1 || (totalPages.value > 0 && newPageNo > totalPages.value)) {
+    return
+  }
+  pageNo.value = newPageNo
+  loadDictTypes(lastQueryParams.value, newPageNo, pageSize.value)
+}
+
+function handlePrevPage() {
+  if (pageNo.value <= 1) {
+    return
+  }
+  handlePageChange(pageNo.value - 1)
+}
+
+function handleNextPage() {
+  if (pageNo.value >= totalPages.value || totalPages.value === 0) {
+    return
+  }
+  handlePageChange(pageNo.value + 1)
 }
 
 async function handleRetry() {
-  await loadDictTypes(lastQueryParams.value)
+  await loadDictTypes(lastQueryParams.value, pageNo.value, pageSize.value)
 }
 
 onMounted(() => {
   filters.typeKey = ''
   filters.value = ''
   lastQueryParams.value = {}
-  loadDictTypes({})
+  pageNo.value = 1
+  pageSize.value = 10
+  loadDictTypes({}, 1, 10)
+})
+
+defineExpose({
+  pageNo,
+  pageSize,
+  totals,
+  totalPages,
+  loadDictTypes,
+  handleQuery,
+  handleReset,
+  handlePageSizeChange,
+  handlePageChange,
+  handlePrevPage,
+  handleNextPage,
 })
 </script>
 
@@ -176,6 +236,51 @@ onMounted(() => {
           <p v-if="!loading && !hasError && dictTypes.length > 0" class="list-summary">
             已显示本页 {{ dictTypes.length }} 个字典类型
           </p>
+
+          <div data-test="pagination-wrap" class="pagination-wrap">
+            <div class="pagination-info">
+              <span data-test="page-totals" class="page-totals">共 {{ totals }} 条，共 {{ totalPages }} 页</span>
+              <span data-test="page-current" class="page-current">第 {{ pageNo }} / {{ totalPages || 1 }} 页</span>
+            </div>
+
+            <div class="pagination-controls">
+              <label for="page-size-select" class="sr-only">每页条数</label>
+              <select
+                id="page-size-select"
+                v-model.number="pageSize"
+                data-test="page-size-select"
+                class="page-size-select"
+                aria-label="每页显示条数"
+                @change="handlePageSizeChange(pageSize)"
+              >
+                <option :value="10">10 条/页</option>
+                <option :value="20">20 条/页</option>
+                <option :value="50">50 条/页</option>
+              </select>
+
+              <button
+                type="button"
+                data-test="page-prev"
+                class="btn-page"
+                :disabled="pageNo <= 1"
+                aria-label="上一页"
+                @click="handlePrevPage"
+              >
+                上一页
+              </button>
+
+              <button
+                type="button"
+                data-test="page-next"
+                class="btn-page"
+                :disabled="pageNo >= totalPages || totalPages === 0"
+                aria-label="下一页"
+                @click="handleNextPage"
+              >
+                下一页
+              </button>
+            </div>
+          </div>
         </section>
 
         <aside class="dict-types-rail" aria-label="当前操作边界">
@@ -457,6 +562,93 @@ onMounted(() => {
   margin-top: 1rem;
   color: var(--orbit-body-muted);
   font-size: 0.8rem;
+}
+
+.pagination-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--orbit-line-soft, rgba(21, 59, 54, 0.15));
+}
+
+.pagination-info {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  color: var(--orbit-body-muted);
+  font-size: 0.85rem;
+}
+
+.page-totals,
+.page-current {
+  white-space: nowrap;
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.page-size-select {
+  height: 2.2rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--orbit-line-soft, rgba(21, 59, 54, 0.2));
+  background: var(--orbit-paper);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  outline-offset: 2px;
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+}
+
+.btn-page {
+  height: 2.2rem;
+  padding: 0 1rem;
+  border: 1px solid var(--orbit-line-soft, rgba(21, 59, 54, 0.2));
+  background: transparent;
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline-offset: 2px;
+  transition: all 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--orbit-paper);
+    border-color: var(--orbit-ink);
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: var(--orbit-line-soft, rgba(21, 59, 54, 0.15));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 
 .dict-types-rail {

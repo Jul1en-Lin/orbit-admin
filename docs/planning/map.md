@@ -70,6 +70,8 @@ status: closed
 
 - [字典类型列表与筛选](issues/32-dict-type-list.md) — 已交付顶栏字典入口、字典类型列表、编码精确与名称前缀筛选、状态与竞态语义及页面级测试。
 
+- [字典类型分页交互](issues/33-dict-type-paging.md) — 已交付字典类型列表分页交互、页码与每页条数前端管理、切页/筛选/重置回首页、边界禁用状态及页面级测试。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。

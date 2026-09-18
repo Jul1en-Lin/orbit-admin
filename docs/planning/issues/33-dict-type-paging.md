@@ -3,8 +3,8 @@ id: dict-type-paging
 title: 字典类型分页交互
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: Jul1en-Lin
 order: 33
 blocked_by: ["dict-type-list"]
 ---
@@ -23,10 +23,10 @@ blocked_by: ["dict-type-list"]
 
 ## Acceptance criteria
 
-- [ ] 按 totals、totalPages、list 处理分页响应；页码与页大小由页面管理，默认每页 10 条，可选 20、50。
-- [ ] 查询或改变页大小后回到第一页。
-- [ ] 重新进入页面恢复默认筛选与第一页。
-- [ ] 不凭空增加后端未提供的排序能力或分页字段。
+- [x] 按 totals、totalPages、list 处理分页响应；页码与页大小由页面管理，默认每页 10 条，可选 20、50。
+- [x] 查询或改变页大小后回到第一页。
+- [x] 重新进入页面恢复默认筛选与第一页。
+- [x] 不凭空增加后端未提供的排序能力或分页字段。
 
 ## Blocked by
 
