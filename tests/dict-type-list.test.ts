@@ -56,7 +56,7 @@ describe('dictionary type list and query (dict-type-list)', () => {
     await router.isReady()
     await flushPromises()
 
-    // Primary nav has enabled "字典" router-link, and "参数" remains disabled
+    // Primary nav has enabled "字典" router-link, and "参数" is now also enabled
     const dictNav = wrapper.find('.primary-nav a[href="/dictionaries"]')
     expect(dictNav.exists()).toBe(true)
     expect(dictNav.text()).toBe('字典')
@@ -64,7 +64,7 @@ describe('dictionary type list and query (dict-type-list)', () => {
     expect(dictNav.attributes('aria-disabled')).toBeUndefined()
 
     const disabledNavs = wrapper.findAll('.primary-nav .nav-item.is-disabled')
-    expect(disabledNavs.map((n) => n.text())).toEqual(['参数'])
+    expect(disabledNavs).toHaveLength(0)
 
     // Navigate to /dictionaries
     await dictNav.trigger('click')

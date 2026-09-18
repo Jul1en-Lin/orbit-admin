@@ -50,11 +50,11 @@ describe('management account list and query (account-list-query)', () => {
 
     expect(router.currentRoute.value.path).toBe('/accounts')
 
-    // Topbar navigation item for 管理端账号 is active; 参数 remains disabled, 字典 is enabled
+    // Topbar navigation item for 管理端账号 is active; all nav items are now enabled
     const activeNav = wrapper.find('.primary-nav .nav-item.is-active')
     expect(activeNav.text()).toBe('管理端账号')
     const disabledNavs = wrapper.findAll('.primary-nav .nav-item.is-disabled')
-    expect(disabledNavs.map((n) => n.text())).toEqual(['参数'])
+    expect(disabledNavs).toHaveLength(0)
 
     // Displays page heading
     expect(wrapper.text()).toContain('管理端账号')

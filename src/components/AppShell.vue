@@ -21,7 +21,7 @@ function signOut() {
       <nav class="primary-nav" aria-label="主导航">
         <router-link to="/accounts" class="nav-item" active-class="is-active">管理端账号</router-link>
         <router-link to="/dictionaries" class="nav-item" active-class="is-active">字典</router-link>
-        <span class="nav-item is-disabled" aria-disabled="true">参数</span>
+        <router-link to="/parameters" class="nav-item" active-class="is-active">参数</router-link>
       </nav>
       <div class="account-bar">
         <span class="account-name">{{ auth.managementAccount?.nickName || auth.managementAccount?.userName }}</span>

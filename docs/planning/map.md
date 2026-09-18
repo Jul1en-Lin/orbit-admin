@@ -76,6 +76,8 @@ status: closed
 
 - [字典项查询与往返](issues/35-dict-item-query.md) — 已交付字典项列表与前缀筛选、所属类型显示与往返导航、分页与竞态丢弃及页面级测试。
 
+- [参数列表与筛选](issues/38-argument-list.md) — 已交付参数列表与精确/包含筛选、分页与竞态丢弃、顶栏参数导航启用及页面级测试。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。

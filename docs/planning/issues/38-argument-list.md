@@ -3,8 +3,8 @@ id: argument-list
 title: 参数列表与筛选
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: Jul1en-Lin
 order: 38
 blocked_by: ["page-test-harness"]
 ---
@@ -23,10 +23,10 @@ blocked_by: ["page-test-harness"]
 
 ## Acceptance criteria
 
-- [ ] 参数导航进入列表，调用参数列表接口，使用 pageNo、pageSize 与可选 configKey 和 name；编码精确、名称包含筛选。
-- [ ] 展示编码、名称、值、备注及可用操作；长文本可完整查看。
-- [ ] 分页、重置、重新进入默认状态以及加载、空、失败与最新响应语义沿用既有先例。
-- [ ] 不提供删除。
+- [x] 参数导航进入列表，调用参数列表接口，使用 pageNo、pageSize 与可选 configKey 和 name；编码精确、名称包含筛选。
+- [x] 展示编码、名称、值、备注及可用操作；长文本可完整查看。
+- [x] 分页、重置、重新进入默认状态以及加载、空、失败与最新响应语义沿用既有先例。
+- [x] 不提供删除。
 
 ## Blocked by
 
