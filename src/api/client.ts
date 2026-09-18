@@ -17,6 +17,7 @@ export class ApiError extends Error {
     public readonly kind: ApiErrorKind,
     public readonly status?: number,
     public readonly code?: number,
+    public readonly serverMessage?: string,
   ) {
     super(message)
     this.name = 'ApiError'
@@ -84,7 +85,7 @@ apiClient.interceptors.response.use(
   (response) => {
     const envelope = response.data as ApiEnvelope<unknown>
     if (envelope.code !== 200000) {
-      throw new ApiError('业务请求失败', 'business', response.status, envelope.code)
+      throw new ApiError(envelope.msg || '业务请求失败', 'business', response.status, envelope.code, envelope.msg)
     }
     response.data = envelope.data
     return response
@@ -103,6 +104,8 @@ apiClient.interceptors.response.use(
       triggerSessionExpired()
     }
 
-    throw new ApiError(status === 401 && !isLoginEndpoint ? '登录状态已失效' : '请求失败', 'http', status, data?.code)
+    const message = status === 401 && !isLoginEndpoint ? '登录状态已失效' : '请求失败'
+
+    throw new ApiError(message, 'http', status, data?.code, data?.msg)
   },
 )

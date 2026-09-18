@@ -4,6 +4,7 @@ import { ElDialog } from 'element-plus'
 import AppShell from '../components/AppShell.vue'
 import { createAccount, fetchAccountList, type SysUserVO } from '../api/account'
 import { fetchAccountDictionaries, type DictDataVO } from '../api/dict'
+import { ApiError } from '../api/client'
 
 const accounts = ref<SysUserVO[]>([])
 const loading = ref(false)
@@ -149,6 +150,10 @@ const createDialogVisible = ref(false)
 const createSubmitting = ref(false)
 const createErrorMessage = ref('')
 
+const PASSWORD_REGEX = /^[a-zA-Z0-9]+$/
+
+type FormFieldName = 'identity' | 'phoneNumber' | 'password' | 'nickName' | 'status'
+
 const createForm = reactive({
   identity: '',
   phoneNumber: '',
@@ -158,6 +163,121 @@ const createForm = reactive({
   remark: '',
 })
 
+const createFieldErrors = reactive<Record<FormFieldName, string>>({
+  identity: '',
+  phoneNumber: '',
+  password: '',
+  nickName: '',
+  status: '',
+})
+
+const createFieldTouched = reactive<Record<FormFieldName, boolean>>({
+  identity: false,
+  phoneNumber: false,
+  password: false,
+  nickName: false,
+  status: false,
+})
+
+function validateIdentity(): string {
+  if (!createForm.identity) {
+    return '请选择身份'
+  }
+  return ''
+}
+
+function validatePhoneNumber(): string {
+  if (!createForm.phoneNumber.trim()) {
+    return '请输入手机号'
+  }
+  return ''
+}
+
+function validatePassword(): string {
+  if (!createForm.password) {
+    return '请输入密码'
+  }
+  if (!PASSWORD_REGEX.test(createForm.password) || createForm.password.length > 20) {
+    return '密码需为1-20位英文字母或数字'
+  }
+  return ''
+}
+
+function validateNickName(): string {
+  if (!createForm.nickName.trim()) {
+    return '请输入昵称'
+  }
+  return ''
+}
+
+function validateStatus(): string {
+  if (!createForm.status) {
+    return '请选择状态'
+  }
+  return ''
+}
+
+function validateSingleField(field: FormFieldName): string {
+  let error = ''
+  switch (field) {
+    case 'identity':
+      error = validateIdentity()
+      break
+    case 'phoneNumber':
+      error = validatePhoneNumber()
+      break
+    case 'password':
+      error = validatePassword()
+      break
+    case 'nickName':
+      error = validateNickName()
+      break
+    case 'status':
+      error = validateStatus()
+      break
+  }
+  createFieldErrors[field] = error
+  return error
+}
+
+function handleFieldBlur(field: FormFieldName) {
+  createFieldTouched[field] = true
+  validateSingleField(field)
+}
+
+function handleFieldInput(field: FormFieldName) {
+  if (createFieldTouched[field]) {
+    validateSingleField(field)
+  }
+}
+
+function handleFieldChange(field: FormFieldName) {
+  createFieldTouched[field] = true
+  validateSingleField(field)
+}
+
+function validateAllCreateFields(): boolean {
+  createFieldTouched.identity = true
+  createFieldTouched.phoneNumber = true
+  createFieldTouched.password = true
+  createFieldTouched.nickName = true
+  createFieldTouched.status = true
+
+  const idErr = validateIdentity()
+  const phoneErr = validatePhoneNumber()
+  const pwdErr = validatePassword()
+  const nickErr = validateNickName()
+  const statusErr = validateStatus()
+
+  createFieldErrors.identity = idErr
+  createFieldErrors.phoneNumber = phoneErr
+  createFieldErrors.password = pwdErr
+  createFieldErrors.nickName = nickErr
+  createFieldErrors.status = statusErr
+
+  return !idErr && !phoneErr && !pwdErr && !nickErr && !statusErr
+}
+
 function resetCreateForm() {
   createForm.identity = ''
   createForm.phoneNumber = ''
@@ -166,6 +286,16 @@ function resetCreateForm() {
   createForm.status = ''
   createForm.remark = ''
   createErrorMessage.value = ''
+  createFieldErrors.identity = ''
+  createFieldErrors.phoneNumber = ''
+  createFieldErrors.password = ''
+  createFieldErrors.nickName = ''
+  createFieldErrors.status = ''
+  createFieldTouched.identity = false
+  createFieldTouched.phoneNumber = false
+  createFieldTouched.password = false
+  createFieldTouched.nickName = false
+  createFieldTouched.status = false
 }
 
 function openCreateDialog() {
@@ -174,16 +304,22 @@ function openCreateDialog() {
 }
 
 function closeCreateDialog() {
+  if (createSubmitting.value) {
+    return
+  }
   createDialogVisible.value = false
   resetCreateForm()
 }
 
 function handleDialogBeforeClose(done: () => void) {
+  if (createSubmitting.value) {
+    return
+  }
   resetCreateForm()
   done()
 }
 
-const isCreateFormValid = computed(() => {
+const isCreateFormFilled = computed(() => {
   return (
     createForm.identity !== '' &&
     createForm.phoneNumber.trim() !== '' &&
@@ -193,12 +329,19 @@ const isCreateFormValid = computed(() => {
   )
 })
 
+const isCreateFormValid = computed(() => isCreateFormFilled.value)
+
 async function handleCreateSubmit() {
   if (dictError.value || dictLoading.value) {
     return
   }
 
-  if (!isCreateFormValid.value || createSubmitting.value) {
+  if (createSubmitting.value) {
+    return
+  }
+
+  const isValid = validateAllCreateFields()
+  if (!isValid) {
     return
   }
 
@@ -219,7 +362,21 @@ async function handleCreateSubmit() {
     resetCreateForm()
     await loadAccounts(lastQueryParams.value)
   } catch (err: unknown) {
-    createErrorMessage.value = err instanceof Error && err.message ? err.message : '创建账号失败，请重试'
+    if (err instanceof ApiError) {
+      if (err.kind === 'network') {
+        createErrorMessage.value = '网络请求失败，请稍后重试'
+      } else if (err.serverMessage) {
+        createErrorMessage.value = err.serverMessage
+      } else if (err.status === 400) {
+        createErrorMessage.value = '提交参数有误，请检查后重试'
+      } else {
+        createErrorMessage.value = err.message || '创建账号失败，请重试'
+      }
+    } else if (err instanceof Error && err.message) {
+      createErrorMessage.value = err.message
+    } else {
+      createErrorMessage.value = '创建账号失败，请重试'
+    }
   } finally {
     createSubmitting.value = false
   }
@@ -378,6 +535,9 @@ onMounted(() => {
         width="520px"
         class="account-create-dialog"
         destroy-on-close
+        :close-on-click-modal="!createSubmitting"
+        :close-on-press-escape="!createSubmitting"
+        :show-close="!createSubmitting"
         :before-close="handleDialogBeforeClose"
       >
         <div data-test="create-account-dialog">
@@ -398,13 +558,15 @@ onMounted(() => {
           </div>
 
           <form class="create-account-form" data-test="create-account-form" @submit.prevent="handleCreateSubmit">
-            <div class="form-item">
+            <div class="form-item" :class="{ 'has-error': createFieldErrors.identity }">
               <label for="create-identity" class="form-label required">身份</label>
               <select
                 id="create-identity"
                 v-model="createForm.identity"
                 data-test="create-form-identity"
-                :disabled="dictError || dictLoading"
+                :disabled="dictError || dictLoading || createSubmitting"
+                @blur="handleFieldBlur('identity')"
+                @change="handleFieldChange('identity')"
               >
                 <option value="">请选择身份</option>
                 <option
@@ -416,9 +578,17 @@ onMounted(() => {
                   {{ item.value }}
                 </option>
               </select>
+              <span
+                v-if="createFieldErrors.identity"
+                class="field-error"
+                data-test="error-create-identity"
+                role="alert"
+              >
+                {{ createFieldErrors.identity }}
+              </span>
             </div>
 
-            <div class="form-item">
+            <div class="form-item" :class="{ 'has-error': createFieldErrors.phoneNumber }">
               <label for="create-phone" class="form-label required">手机号</label>
               <input
                 id="create-phone"
@@ -426,10 +596,21 @@ onMounted(() => {
                 data-test="create-form-phone"
                 type="text"
                 placeholder="请输入手机号"
+                :disabled="createSubmitting"
+                @blur="handleFieldBlur('phoneNumber')"
+                @input="handleFieldInput('phoneNumber')"
               />
+              <span
+                v-if="createFieldErrors.phoneNumber"
+                class="field-error"
+                data-test="error-create-phone"
+                role="alert"
+              >
+                {{ createFieldErrors.phoneNumber }}
+              </span>
             </div>
 
-            <div class="form-item">
+            <div class="form-item" :class="{ 'has-error': createFieldErrors.password }">
               <label for="create-password" class="form-label required">密码</label>
               <input
                 id="create-password"
@@ -439,10 +620,21 @@ onMounted(() => {
                 maxlength="20"
                 placeholder="1-20位英文字母或数字"
                 autocomplete="new-password"
+                :disabled="createSubmitting"
+                @blur="handleFieldBlur('password')"
+                @input="handleFieldInput('password')"
               />
+              <span
+                v-if="createFieldErrors.password"
+                class="field-error"
+                data-test="error-create-password"
+                role="alert"
+              >
+                {{ createFieldErrors.password }}
+              </span>
             </div>
 
-            <div class="form-item">
+            <div class="form-item" :class="{ 'has-error': createFieldErrors.nickName }">
               <label for="create-nickname" class="form-label required">昵称</label>
               <input
                 id="create-nickname"
@@ -450,16 +642,29 @@ onMounted(() => {
                 data-test="create-form-nickname"
                 type="text"
                 placeholder="请输入昵称"
+                :disabled="createSubmitting"
+                @blur="handleFieldBlur('nickName')"
+                @input="handleFieldInput('nickName')"
               />
+              <span
+                v-if="createFieldErrors.nickName"
+                class="field-error"
+                data-test="error-create-nickname"
+                role="alert"
+              >
+                {{ createFieldErrors.nickName }}
+              </span>
             </div>
 
-            <div class="form-item">
+            <div class="form-item" :class="{ 'has-error': createFieldErrors.status }">
               <label for="create-status" class="form-label required">状态</label>
               <select
                 id="create-status"
                 v-model="createForm.status"
                 data-test="create-form-status"
-                :disabled="dictError || dictLoading"
+                :disabled="dictError || dictLoading || createSubmitting"
+                @blur="handleFieldBlur('status')"
+                @change="handleFieldChange('status')"
               >
                 <option value="">请选择状态</option>
                 <option
@@ -471,6 +676,9 @@ onMounted(() => {
                   {{ item.value }}
                 </option>
               </select>
+              <span v-if="createFieldErrors.status" class="field-error" data-test="error-create-status" role="alert">
+                {{ createFieldErrors.status }}
+              </span>
             </div>
 
             <div class="form-item">
@@ -481,12 +689,14 @@ onMounted(() => {
                 data-test="create-form-remark"
                 rows="3"
                 placeholder="可选备注信息"
+                :disabled="createSubmitting"
               />
             </div>
 
-            <p v-if="createErrorMessage" class="create-error-message" data-test="create-error-message" role="alert">
-              {{ createErrorMessage }}
-            </p>
+            <div v-if="createErrorMessage" class="create-error-message" data-test="create-error-message" role="alert">
+              <span class="create-error-icon" aria-hidden="true">!</span>
+              <span class="create-error-text">{{ createErrorMessage }}</span>
+            </div>
 
             <div class="dialog-actions">
               <button
@@ -978,13 +1188,42 @@ onMounted(() => {
   resize: vertical;
 }
 
+.field-error {
+  margin-top: 0.15rem;
+  color: #d9534f;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.form-item.has-error input,
+.form-item.has-error select {
+  border-color: #d9534f;
+}
+
 .create-error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin: 0;
-  padding: 0.5rem 0.75rem;
+  padding: 0.55rem 0.75rem;
   background: rgba(217, 83, 79, 0.1);
   border-left: 3px solid #d9534f;
   color: #d9534f;
   font-size: 0.85rem;
+}
+
+.create-error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: #d9534f;
+  color: var(--orbit-paper);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .dialog-actions {

@@ -3,8 +3,8 @@ id: account-create-validation
 title: 校验、防重复与失败反馈
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: Jul1en-Lin
 order: 29
 blocked_by: ["account-create-dialog"]
 ---
@@ -23,9 +23,9 @@ blocked_by: ["account-create-dialog"]
 
 ## Acceptance criteria
 
-- [ ] 提交前展示字段校验，无效输入不发送请求。
-- [ ] 提交中防重复提交，并禁止关闭弹窗。
-- [ ] 明确失败保留已填输入且只反馈一次。
+- [x] 提交前展示字段校验，无效输入不发送请求。
+- [x] 提交中防重复提交，并禁止关闭弹窗。
+- [x] 明确失败保留已填输入且只反馈一次。
 
 ## Blocked by
 

@@ -62,6 +62,8 @@ status: closed
 
 - [新增管理端账号与成功路径](issues/28-account-create-dialog.md) — 已交付列表打开新增弹窗、身份与状态主动选择、无 userId 提交 add_edit、明文密码契约及成功关闭并刷新。
 
+- [校验、防重复与失败反馈](issues/29-account-create-validation.md) — 已交付提交前字段与密码格式校验、提交中防重复请求与弹窗关闭锁定，以及失败保留已填输入与单次反馈。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。
