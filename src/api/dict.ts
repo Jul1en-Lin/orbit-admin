@@ -119,3 +119,55 @@ export async function fetchDictTypeList(params?: DictTypeListParams): Promise<Ba
   })
   return response.data
 }
+
+export interface CreateDictTypePayload {
+  typeKey: string
+  value: string
+  remark?: string | null
+}
+
+export interface UpdateDictTypePayload {
+  typeKey: string
+  value: string
+  remark?: string | null
+}
+
+/**
+ * Create a new dictionary type.
+ * Backend endpoint: POST /dictionary_type/add
+ */
+export async function createDictType(payload: {
+  typeKey: string
+  value: string
+  remark?: string | null
+}): Promise<number> {
+  const body: Record<string, unknown> = {
+    typeKey: payload.typeKey,
+    value: payload.value,
+  }
+  if (payload.remark !== undefined) {
+    body.remark = payload.remark
+  }
+  const response = await apiClient.post<number>('/dictionary_type/add', body)
+  return response.data
+}
+
+/**
+ * Update an existing dictionary type by typeKey.
+ * Backend endpoint: POST /dictionary_type/edit
+ */
+export async function updateDictType(payload: {
+  typeKey: string
+  value: string
+  remark?: string | null
+}): Promise<number> {
+  const body: Record<string, unknown> = {
+    typeKey: payload.typeKey,
+    value: payload.value,
+  }
+  if (payload.remark !== undefined) {
+    body.remark = payload.remark
+  }
+  const response = await apiClient.post<number>('/dictionary_type/edit', body)
+  return response.data
+}
