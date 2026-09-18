@@ -90,6 +90,8 @@ status: closed
 
 - [部署说明与凭据边界](issues/42-deployment-notes.md) — 已交付构建、开发启动、质量门禁、模板独立复用与生产 Nginx 部署说明，明确浏览器公开凭据边界与事实阻碍记录。
 
+- [完整自动检查与后端可用性核实](issues/43-automated-check.md) — 已在冻结依赖下完成全套格式/Lint/类型/测试/构建统一门禁，并详实核实本地网关与依赖未运行的事实与联调阻碍。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。

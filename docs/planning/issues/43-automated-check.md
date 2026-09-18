@@ -3,8 +3,8 @@ id: automated-check
 title: 完整自动检查与后端可用性核实
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: worker
 order: 43
 blocked_by: ["expiry-handling", "redirect-and-404", "account-list-states", "status-dictionary", "account-create-validation", "account-create-uncertain", "account-create-dirty", "dict-type-paging", "dict-type-edit", "dict-item-create", "dict-item-edit", "argument-edit"]
 ---
@@ -23,8 +23,8 @@ blocked_by: ["expiry-handling", "redirect-and-404", "account-list-states", "stat
 
 ## Acceptance criteria
 
-- [ ] 以冻结的锁文件安装依赖，运行完整统一检查并记录格式、Lint、类型、自动测试与生产构建的结果；不以单次构建成功宣称首版交付。
-- [ ] 核实本地后端及其依赖的当前运行状态；缺少环境或凭据时列明阻碍并通过非仓库渠道获取，不在记录或输出中披露秘密。
+- [x] 以冻结的锁文件安装依赖，运行完整统一检查并记录格式、Lint、类型、自动测试与生产构建的结果；不以单次构建成功宣称首版交付。
+- [x] 核实本地后端及其依赖的当前运行状态；缺少环境或凭据时列明阻碍并通过非仓库渠道获取，不在记录或输出中披露秘密。
 
 ## Blocked by
 
