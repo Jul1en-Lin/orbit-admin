@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
+import { ElDialog } from 'element-plus'
 import AppShell from '../components/AppShell.vue'
-import { fetchAccountList, type SysUserVO } from '../api/account'
+import { createAccount, fetchAccountList, type SysUserVO } from '../api/account'
 import { fetchAccountDictionaries, type DictDataVO } from '../api/dict'
 
 const accounts = ref<SysUserVO[]>([])
@@ -24,6 +25,19 @@ const filters = reactive({
 })
 
 const lastQueryParams = ref<{ userId?: string; phoneNumber?: string; status?: string }>({})
+
+// Identity options for create dialog derived dynamically from admin dictionary
+const identityOptions = computed(() => {
+  const seen = new Set<string>()
+  const options: { dataKey: string; value: string }[] = []
+  for (const item of identityDict.value) {
+    if (!seen.has(item.dataKey)) {
+      seen.add(item.dataKey)
+      options.push({ dataKey: item.dataKey, value: item.value })
+    }
+  }
+  return options
+})
 
 // Status options for filter select derived dynamically from common_status dictionary
 const statusOptions = computed(() => {
@@ -130,6 +144,87 @@ function handleRetry() {
   loadAccounts(lastQueryParams.value)
 }
 
+// Create account dialog state
+const createDialogVisible = ref(false)
+const createSubmitting = ref(false)
+const createErrorMessage = ref('')
+
+const createForm = reactive({
+  identity: '',
+  phoneNumber: '',
+  password: '',
+  nickName: '',
+  status: '',
+  remark: '',
+})
+
+function resetCreateForm() {
+  createForm.identity = ''
+  createForm.phoneNumber = ''
+  createForm.password = ''
+  createForm.nickName = ''
+  createForm.status = ''
+  createForm.remark = ''
+  createErrorMessage.value = ''
+}
+
+function openCreateDialog() {
+  resetCreateForm()
+  createDialogVisible.value = true
+}
+
+function closeCreateDialog() {
+  createDialogVisible.value = false
+  resetCreateForm()
+}
+
+function handleDialogBeforeClose(done: () => void) {
+  resetCreateForm()
+  done()
+}
+
+const isCreateFormValid = computed(() => {
+  return (
+    createForm.identity !== '' &&
+    createForm.phoneNumber.trim() !== '' &&
+    createForm.password !== '' &&
+    createForm.nickName.trim() !== '' &&
+    createForm.status !== ''
+  )
+})
+
+async function handleCreateSubmit() {
+  if (dictError.value || dictLoading.value) {
+    return
+  }
+
+  if (!isCreateFormValid.value || createSubmitting.value) {
+    return
+  }
+
+  createSubmitting.value = true
+  createErrorMessage.value = ''
+
+  try {
+    await createAccount({
+      identity: createForm.identity,
+      phoneNumber: createForm.phoneNumber.trim(),
+      password: createForm.password,
+      nickName: createForm.nickName.trim(),
+      status: createForm.status,
+      remark: createForm.remark.trim() ? createForm.remark.trim() : undefined,
+    })
+
+    createDialogVisible.value = false
+    resetCreateForm()
+    await loadAccounts(lastQueryParams.value)
+  } catch (err: unknown) {
+    createErrorMessage.value = err instanceof Error && err.message ? err.message : '创建账号失败，请重试'
+  } finally {
+    createSubmitting.value = false
+  }
+}
+
 onMounted(() => {
   lastQueryParams.value = {}
   loadDictionaries()
@@ -210,6 +305,12 @@ onMounted(() => {
             </div>
           </form>
 
+          <div class="table-toolbar">
+            <button type="button" class="btn-create-account" data-test="btn-create-account" @click="openCreateDialog">
+              + 新增账号
+            </button>
+          </div>
+
           <div class="table-wrap">
             <table class="account-table" data-test="account-table">
               <thead>
@@ -270,6 +371,145 @@ onMounted(() => {
           </div>
         </aside>
       </div>
+
+      <el-dialog
+        v-model="createDialogVisible"
+        title="新增管理端账号"
+        width="520px"
+        class="account-create-dialog"
+        destroy-on-close
+        :before-close="handleDialogBeforeClose"
+      >
+        <div data-test="create-account-dialog">
+          <div v-if="dictError" class="dict-alert dialog-dict-alert" data-test="dialog-dict-alert" role="alert">
+            <div class="dict-alert-content">
+              <span class="dict-alert-icon" aria-hidden="true">!</span>
+              <p class="dict-alert-message">{{ dictErrorMessage || '字典选项加载失败，无法选择身份与状态。' }}</p>
+            </div>
+            <button
+              type="button"
+              class="btn-dict-retry"
+              data-test="dialog-dict-retry"
+              :disabled="dictLoading"
+              @click="loadDictionaries"
+            >
+              {{ dictLoading ? '重试中...' : '重试加载选项' }}
+            </button>
+          </div>
+
+          <form class="create-account-form" data-test="create-account-form" @submit.prevent="handleCreateSubmit">
+            <div class="form-item">
+              <label for="create-identity" class="form-label required">身份</label>
+              <select
+                id="create-identity"
+                v-model="createForm.identity"
+                data-test="create-form-identity"
+                :disabled="dictError || dictLoading"
+              >
+                <option value="">请选择身份</option>
+                <option
+                  v-for="item in identityOptions"
+                  :key="item.dataKey"
+                  :value="item.dataKey"
+                  :data-test="`create-identity-option-${item.dataKey}`"
+                >
+                  {{ item.value }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-item">
+              <label for="create-phone" class="form-label required">手机号</label>
+              <input
+                id="create-phone"
+                v-model="createForm.phoneNumber"
+                data-test="create-form-phone"
+                type="text"
+                placeholder="请输入手机号"
+              />
+            </div>
+
+            <div class="form-item">
+              <label for="create-password" class="form-label required">密码</label>
+              <input
+                id="create-password"
+                v-model="createForm.password"
+                data-test="create-form-password"
+                type="password"
+                maxlength="20"
+                placeholder="1-20位英文字母或数字"
+                autocomplete="new-password"
+              />
+            </div>
+
+            <div class="form-item">
+              <label for="create-nickname" class="form-label required">昵称</label>
+              <input
+                id="create-nickname"
+                v-model="createForm.nickName"
+                data-test="create-form-nickname"
+                type="text"
+                placeholder="请输入昵称"
+              />
+            </div>
+
+            <div class="form-item">
+              <label for="create-status" class="form-label required">状态</label>
+              <select
+                id="create-status"
+                v-model="createForm.status"
+                data-test="create-form-status"
+                :disabled="dictError || dictLoading"
+              >
+                <option value="">请选择状态</option>
+                <option
+                  v-for="item in statusOptions"
+                  :key="item.dataKey"
+                  :value="item.dataKey"
+                  :data-test="`create-status-option-${item.dataKey}`"
+                >
+                  {{ item.value }}
+                </option>
+              </select>
+            </div>
+
+            <div class="form-item">
+              <label for="create-remark" class="form-label">备注</label>
+              <textarea
+                id="create-remark"
+                v-model="createForm.remark"
+                data-test="create-form-remark"
+                rows="3"
+                placeholder="可选备注信息"
+              />
+            </div>
+
+            <p v-if="createErrorMessage" class="create-error-message" data-test="create-error-message" role="alert">
+              {{ createErrorMessage }}
+            </p>
+
+            <div class="dialog-actions">
+              <button
+                type="button"
+                class="btn-cancel-create"
+                data-test="btn-cancel-create"
+                :disabled="createSubmitting"
+                @click="closeCreateDialog"
+              >
+                取消
+              </button>
+              <button
+                type="submit"
+                class="btn-submit-create"
+                data-test="btn-submit-create"
+                :disabled="dictError || dictLoading || createSubmitting || !isCreateFormValid"
+              >
+                {{ createSubmitting ? '提交中...' : '确认新增' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </el-dialog>
     </div>
   </AppShell>
 </template>
@@ -628,6 +868,177 @@ onMounted(() => {
 .boundary-note p {
   margin: 0.4rem 0 0;
   font-size: 0.8rem;
+}
+
+.table-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.btn-create-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.4rem;
+  padding: 0 1.25rem;
+  border: 0;
+  background: var(--orbit-orange);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  outline-offset: 2px;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+}
+
+:deep(.account-create-dialog) {
+  background: var(--orbit-paper);
+  border: 1px solid var(--orbit-line-soft);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+  .el-dialog__header {
+    padding: 1.5rem 1.5rem 1rem;
+    margin-right: 0;
+    border-bottom: 1px solid var(--orbit-line-soft);
+  }
+
+  .el-dialog__title {
+    color: var(--orbit-ink);
+    font-family: var(--orbit-font-serif);
+    font-size: 1.35rem;
+    font-weight: 400;
+  }
+
+  .el-dialog__headerbtn .el-dialog__close {
+    color: var(--orbit-body-muted);
+  }
+
+  .el-dialog__body {
+    padding: 1.5rem;
+    color: var(--orbit-ink);
+  }
+}
+
+.create-account-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-label {
+  color: var(--orbit-body-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  &.required::after {
+    content: ' *';
+    color: var(--orbit-orange);
+  }
+}
+
+.form-item input,
+.form-item select,
+.form-item textarea {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: var(--orbit-paper);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline-offset: 2px;
+  border-radius: 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.form-item textarea {
+  resize: vertical;
+}
+
+.create-error-message {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  background: rgba(217, 83, 79, 0.1);
+  border-left: 3px solid #d9534f;
+  color: #d9534f;
+  font-size: 0.85rem;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.btn-cancel-create {
+  height: 2.4rem;
+  padding: 0 1.25rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: transparent;
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-submit-create {
+  height: 2.4rem;
+  padding: 0 1.5rem;
+  border: 0;
+  background: var(--orbit-orange);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.dialog-dict-alert {
+  margin-bottom: 1.25rem;
 }
 
 @media (max-width: 900px) {

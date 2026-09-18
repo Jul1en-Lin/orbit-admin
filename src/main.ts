@@ -1,6 +1,6 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
-import { ElButton, ElFormItem, ElInput } from 'element-plus'
+import { ElButton, ElDialog, ElFormItem, ElInput } from 'element-plus'
 import 'element-plus/dist/index.css'
 import App from './App.vue'
 import { createOrbitRouter } from './router'
@@ -16,6 +16,7 @@ export function createOrbitApp() {
   app.use(pinia)
   app.use(router)
   app.component('ElButton', ElButton)
+  app.component('ElDialog', ElDialog)
   app.component('ElFormItem', ElFormItem)
   app.component('ElInput', ElInput)
 

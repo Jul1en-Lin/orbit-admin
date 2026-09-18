@@ -3,8 +3,8 @@ id: account-create-dialog
 title: 新增管理端账号与成功路径
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: Jul1en-Lin
 order: 28
 blocked_by: ["status-dictionary"]
 ---
@@ -23,10 +23,10 @@ blocked_by: ["status-dictionary"]
 
 ## Acceptance criteria
 
-- [ ] 从列表打开新增弹窗，调用新增接口且不传用户 ID；身份、手机号、密码、昵称、状态必填，备注可选；不提供管理端账号编辑能力。
-- [ ] 身份与状态来自完整字典选项且必须主动选择，不默认赋予身份；选项加载失败时可重试并阻止依赖选项的提交。
-- [ ] 密码为 1–20 位英文字母或数字；不复用登录的密码转换，不新增契约外的格式或长度约束，不记录密码。
-- [ ] 明确成功后关闭弹窗并刷新列表；非分页列表不增加分页动作。
+- [x] 从列表打开新增弹窗，调用新增接口且不传用户 ID；身份、手机号、密码、昵称、状态必填，备注可选；不提供管理端账号编辑能力。
+- [x] 身份与状态来自完整字典选项且必须主动选择，不默认赋予身份；选项加载失败时可重试并阻止依赖选项的提交。
+- [x] 密码为 1–20 位英文字母或数字；不复用登录的密码转换，不新增契约外的格式或长度约束，不记录密码。
+- [x] 明确成功后关闭弹窗并刷新列表；非分页列表不增加分页动作。
 
 ## Blocked by
 

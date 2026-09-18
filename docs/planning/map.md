@@ -60,6 +60,8 @@ status: closed
 
 - [身份与状态字典读取](issues/27-status-dictionary.md) — 已交付身份与状态字典完整分页读取、表格与状态下拉动态映射、未知编码原始兜底及加载失败重试。
 
+- [新增管理端账号与成功路径](issues/28-account-create-dialog.md) — 已交付列表打开新增弹窗、身份与状态主动选择、无 userId 提交 add_edit、明文密码契约及成功关闭并刷新。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。
