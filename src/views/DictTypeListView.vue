@@ -480,7 +480,13 @@ defineExpose({
                     >
                       编辑
                     </button>
-                    <span class="action-placeholder" data-test="action-placeholder">维护字典项</span>
+                    <router-link
+                      :to="`/dictionaries/${item.typeKey}/items`"
+                      class="link-dict-items"
+                      data-test="link-dict-items"
+                    >
+                      维护字典项
+                    </router-link>
                   </td>
                 </tr>
               </tbody>
@@ -1087,6 +1093,30 @@ defineExpose({
   font-family: inherit;
   font-size: 0.8rem;
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--orbit-paper);
+    border-color: var(--orbit-orange);
+    color: var(--orbit-orange);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+}
+
+.link-dict-items {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: transparent;
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.15s ease;
 

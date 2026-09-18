@@ -3,8 +3,8 @@ id: dict-item-query
 title: 字典项查询与往返
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: Jul1en-Lin
 order: 35
 blocked_by: ["dict-type-list"]
 ---
@@ -23,10 +23,10 @@ blocked_by: ["dict-type-list"]
 
 ## Acceptance criteria
 
-- [ ] 字典类型列表提供有效的字典项入口；字典项页显示所属类型。
-- [ ] 查询使用固定所属类型、可选名称与 pageNo、pageSize；名称按前缀筛选，保持后端给出的排序。
-- [ ] 展示编码、名称、排序、状态、备注及可用操作；分页与状态语义沿用既有先例。
-- [ ] 返回字典类型列表时恢复默认筛选与第一页。
+- [x] 字典类型列表提供有效的字典项入口；字典项页显示所属类型。
+- [x] 查询使用固定所属类型、可选名称与 pageNo、pageSize；名称按前缀筛选，保持后端给出的排序。
+- [x] 展示编码、名称、排序、状态、备注及可用操作；分页与状态语义沿用既有先例。
+- [x] 返回字典类型列表时恢复默认筛选与第一页。
 
 ## Blocked by
 

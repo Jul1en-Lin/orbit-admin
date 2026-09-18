@@ -38,16 +38,23 @@ export interface DictDataListParams {
   pageSize?: number
 }
 
+export type DictItemListParams = DictDataListParams
+
 export interface AccountDictionaries {
   admin: DictDataVO[]
   common_status: DictDataVO[]
 }
 
 /**
- * Fetch a single page of dictionary data for a given typeKey.
+ * Fetch a single page of dictionary items for a given typeKey.
  * Backend endpoint: GET /dictionary_data/list?typeKey=&value=&pageNo=&pageSize=
  */
-export async function fetchDictDataPage(params: DictDataListParams): Promise<BasePageVO<DictDataVO>> {
+export async function fetchDictItemList(params: {
+  typeKey: string
+  value?: string
+  pageNo?: number
+  pageSize?: number
+}): Promise<BasePageVO<DictDataVO>> {
   const queryParams: Record<string, string | number> = {
     typeKey: params.typeKey,
     pageNo: params.pageNo ?? 1,
@@ -62,6 +69,14 @@ export async function fetchDictDataPage(params: DictDataListParams): Promise<Bas
     params: queryParams,
   })
   return response.data
+}
+
+/**
+ * Fetch a single page of dictionary data for a given typeKey.
+ * Backend endpoint: GET /dictionary_data/list?typeKey=&value=&pageNo=&pageSize=
+ */
+export async function fetchDictDataPage(params: DictDataListParams): Promise<BasePageVO<DictDataVO>> {
+  return fetchDictItemList(params)
 }
 
 /**

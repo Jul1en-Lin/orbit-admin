@@ -74,6 +74,8 @@ status: closed
 
 - [字典类型新增与编辑](issues/34-dict-type-edit.md) — 已交付字典类型新增与编辑弹窗、编码只读与全空白校验、防重复锁定与保留当前页/回第一页刷新规则及页面级测试。
 
+- [字典项查询与往返](issues/35-dict-item-query.md) — 已交付字典项列表与前缀筛选、所属类型显示与往返导航、分页与竞态丢弃及页面级测试。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。
