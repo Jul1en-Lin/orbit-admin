@@ -3,6 +3,7 @@ import WorkbenchView from '../views/WorkbenchView.vue'
 import LoginView from '../views/LoginView.vue'
 import NotFoundView from '../views/NotFoundView.vue'
 import AccountListView from '../views/AccountListView.vue'
+import DictTypeListView from '../views/DictTypeListView.vue'
 import { useAuthStore } from '../auth/store'
 
 type AuthStore = ReturnType<typeof useAuthStore>
@@ -17,6 +18,12 @@ export function createOrbitRouter(auth: AuthStore): Router {
         path: '/accounts',
         name: 'accounts',
         component: AccountListView,
+        meta: { requiresAuth: true },
+      },
+      {
+        path: '/dictionaries',
+        name: 'dictionaries',
+        component: DictTypeListView,
         meta: { requiresAuth: true },
       },
       {

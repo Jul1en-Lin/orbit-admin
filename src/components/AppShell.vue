@@ -20,7 +20,7 @@ function signOut() {
       </div>
       <nav class="primary-nav" aria-label="主导航">
         <router-link to="/accounts" class="nav-item" active-class="is-active">管理端账号</router-link>
-        <span class="nav-item is-disabled" aria-disabled="true">字典</span>
+        <router-link to="/dictionaries" class="nav-item" active-class="is-active">字典</router-link>
         <span class="nav-item is-disabled" aria-disabled="true">参数</span>
       </nav>
       <div class="account-bar">

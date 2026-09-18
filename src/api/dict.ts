@@ -10,10 +10,25 @@ export interface DictDataVO {
   status: number
 }
 
+export interface DictTypeVO {
+  id: number
+  typeKey: string
+  value: string
+  remark?: string | null
+  status: number
+}
+
 export interface BasePageVO<T> {
   totals: number
   totalPages: number
   list: T[]
+}
+
+export interface DictTypeListParams {
+  pageNo?: number
+  pageSize?: number
+  typeKey?: string
+  value?: string
 }
 
 export interface DictDataListParams {
@@ -79,4 +94,28 @@ export async function fetchAllDictData(typeKey: string, pageSize = 20): Promise<
 export async function fetchAccountDictionaries(): Promise<AccountDictionaries> {
   const [admin, common_status] = await Promise.all([fetchAllDictData('admin'), fetchAllDictData('common_status')])
   return { admin, common_status }
+}
+
+/**
+ * Fetch a page of dictionary types.
+ * Backend endpoint: GET /dictionary_type/list?pageNo=&pageSize=&typeKey=&value=
+ */
+export async function fetchDictTypeList(params?: DictTypeListParams): Promise<BasePageVO<DictTypeVO>> {
+  const queryParams: Record<string, string | number> = {
+    pageNo: params?.pageNo ?? 1,
+    pageSize: params?.pageSize ?? 10,
+  }
+
+  if (params?.typeKey !== undefined && params?.typeKey !== null && params.typeKey.trim() !== '') {
+    queryParams.typeKey = params.typeKey.trim()
+  }
+
+  if (params?.value !== undefined && params?.value !== null && params.value.trim() !== '') {
+    queryParams.value = params.value.trim()
+  }
+
+  const response = await apiClient.get<BasePageVO<DictTypeVO>>('/dictionary_type/list', {
+    params: queryParams,
+  })
+  return response.data
 }

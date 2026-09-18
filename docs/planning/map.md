@@ -68,6 +68,8 @@ status: closed
 
 - [脏表单确认与失效清理](issues/31-account-create-dirty.md) — 已交付修改过的表单在取消、关闭或站内导航前确认放弃、未修改直接关闭，以及认证失效直接清理未提交内容且不重放写请求。
 
+- [字典类型列表与筛选](issues/32-dict-type-list.md) — 已交付顶栏字典入口、字典类型列表、编码精确与名称前缀筛选、状态与竞态语义及页面级测试。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。

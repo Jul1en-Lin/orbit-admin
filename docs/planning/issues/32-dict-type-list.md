@@ -3,8 +3,8 @@ id: dict-type-list
 title: 字典类型列表与筛选
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: Jul1en-Lin
 order: 32
 blocked_by: ["page-test-harness"]
 ---
@@ -23,10 +23,10 @@ blocked_by: ["page-test-harness"]
 
 ## Acceptance criteria
 
-- [ ] 字典导航进入类型列表，调用字典类型列表接口，使用 pageNo、pageSize 与可选 typeKey 和 value；编码精确、名称前缀筛选。
-- [ ] 展示编码、名称、状态、备注及可用操作；长文本可完整查看。
-- [ ] 点击查询或回车才应用筛选；重置清空筛选并重新查询；重新进入页面恢复默认状态。
-- [ ] 加载、暂无数据、失败与重试、只接受最新响应的语义沿用既有列表先例。
+- [x] 字典导航进入类型列表，调用字典类型列表接口，使用 pageNo、pageSize 与可选 typeKey 和 value；编码精确、名称前缀筛选。
+- [x] 展示编码、名称、状态、备注及可用操作；长文本可完整查看。
+- [x] 点击查询或回车才应用筛选；重置清空筛选并重新查询；重新进入页面恢复默认状态。
+- [x] 加载、暂无数据、失败与重试、只接受最新响应的语义沿用既有列表先例。
 
 ## Blocked by
 
