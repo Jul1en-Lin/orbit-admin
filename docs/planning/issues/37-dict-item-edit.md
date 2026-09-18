@@ -3,8 +3,8 @@ id: dict-item-edit
 title: 字典项编辑与备注限制
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: worker
 order: 37
 blocked_by: ["dict-item-query"]
 ---
@@ -23,10 +23,10 @@ blocked_by: ["dict-item-query"]
 
 ## Acceptance criteria
 
-- [ ] 编辑提交编码、名称、可选排序与备注；编码只读，所属类型固定且不发送可变的所属类型。
-- [ ] 清空已有备注时阻止提交并提示「当前接口不支持清空备注」，不以空格绕过。
-- [ ] 不承诺把已有排序清空为 null，也不将无效清空呈现为已生效。
-- [ ] 编辑成功保留当前页并刷新；不提供删除或状态写入；写入异常行为沿用既有语义。
+- [x] 编辑提交编码、名称、可选排序与备注；编码只读，所属类型固定且不发送可变的所属类型。
+- [x] 清空已有备注时阻止提交并提示「当前接口不支持清空备注」，不以空格绕过。
+- [x] 不承诺把已有排序清空为 null，也不将无效清空呈现为已生效。
+- [x] 编辑成功保留当前页并刷新；不提供删除或状态写入；写入异常行为沿用既有语义。
 
 ## Blocked by
 

@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { ElDialog } from 'element-plus'
 import AppShell from '../components/AppShell.vue'
-import { createDictItem, fetchDictItemList, type DictDataVO } from '../api/dict'
+import { createDictItem, fetchDictItemList, updateDictItem, type DictDataVO } from '../api/dict'
 import { ApiError } from '../api/client'
 import { useAuthStore } from '../auth/store'
 
@@ -31,11 +31,20 @@ const lastQueryParams = ref<{ value?: string }>({})
 
 // Modal state
 const dialogVisible = ref(false)
+const dialogMode = ref<'add' | 'edit'>('add')
 const dialogSubmitting = ref(false)
 const dialogErrorMessage = ref('')
 const refreshFailureNotice = ref('')
+const hasOriginalRemark = ref(false)
 
-type FormFieldName = 'dataKey' | 'value' | 'sort'
+const initialSnapshot = reactive({
+  dataKey: '',
+  value: '',
+  sort: '',
+  remark: '',
+})
+
+type FormFieldName = 'dataKey' | 'value' | 'sort' | 'remark'
 
 const form = reactive({
   dataKey: '',
@@ -48,16 +57,18 @@ const fieldErrors = reactive<Record<FormFieldName, string>>({
   dataKey: '',
   value: '',
   sort: '',
+  remark: '',
 })
 
 const fieldTouched = reactive<Record<FormFieldName, boolean>>({
   dataKey: false,
   value: false,
   sort: false,
+  remark: false,
 })
 
 function validateDataKey(): string {
-  if (!form.dataKey.trim()) {
+  if (dialogMode.value === 'add' && !form.dataKey.trim()) {
     return '请输入字典项编码'
   }
   return ''
@@ -81,6 +92,15 @@ function validateSort(): string {
   return ''
 }
 
+function validateRemark(): string {
+  if (dialogMode.value === 'edit' && hasOriginalRemark.value) {
+    if (!form.remark.trim()) {
+      return '当前接口不支持清空备注'
+    }
+  }
+  return ''
+}
+
 function validateSingleField(field: FormFieldName): string {
   let error = ''
   if (field === 'dataKey') {
@@ -89,6 +109,8 @@ function validateSingleField(field: FormFieldName): string {
     error = validateValue()
   } else if (field === 'sort') {
     error = validateSort()
+  } else if (field === 'remark') {
+    error = validateRemark()
   }
   fieldErrors[field] = error
   return error
@@ -100,7 +122,7 @@ function handleFieldBlur(field: FormFieldName) {
 }
 
 function handleFieldInput(field: FormFieldName) {
-  if (fieldTouched[field]) {
+  if (fieldTouched[field] || fieldErrors[field]) {
     validateSingleField(field)
   }
 }
@@ -109,25 +131,30 @@ function validateAllFields(): boolean {
   fieldTouched.dataKey = true
   fieldTouched.value = true
   fieldTouched.sort = true
+  fieldTouched.remark = true
 
   const keyErr = validateDataKey()
   const valErr = validateValue()
   const sortErr = validateSort()
+  const remarkErr = validateRemark()
 
   fieldErrors.dataKey = keyErr
   fieldErrors.value = valErr
   fieldErrors.sort = sortErr
+  fieldErrors.remark = remarkErr
 
-  return !keyErr && !valErr && !sortErr
+  return !keyErr && !valErr && !sortErr && !remarkErr
 }
 
 function clearFieldErrors() {
   fieldErrors.dataKey = ''
   fieldErrors.value = ''
   fieldErrors.sort = ''
+  fieldErrors.remark = ''
   fieldTouched.dataKey = false
   fieldTouched.value = false
   fieldTouched.sort = false
+  fieldTouched.remark = false
 }
 
 function resetForm() {
@@ -135,6 +162,11 @@ function resetForm() {
   form.value = ''
   form.sort = ''
   form.remark = ''
+  initialSnapshot.dataKey = ''
+  initialSnapshot.value = ''
+  initialSnapshot.sort = ''
+  initialSnapshot.remark = ''
+  hasOriginalRemark.value = false
   dialogErrorMessage.value = ''
   clearFieldErrors()
 }
@@ -142,7 +174,12 @@ function resetForm() {
 const CONFIRM_DISCARD_MESSAGE = '表单有未保存的修改，确定放弃吗？'
 
 const isFormDirty = computed(() => {
-  return form.dataKey !== '' || form.value !== '' || form.sort !== '' || form.remark !== ''
+  if (dialogMode.value === 'add') {
+    return form.dataKey !== '' || form.value !== '' || form.sort !== '' || form.remark !== ''
+  }
+  return (
+    form.value !== initialSnapshot.value || form.sort !== initialSnapshot.sort || form.remark !== initialSnapshot.remark
+  )
 })
 
 function confirmDiscardChanges(): boolean {
@@ -155,7 +192,27 @@ function confirmDiscardChanges(): boolean {
 
 function openAddDialog() {
   refreshFailureNotice.value = ''
+  dialogMode.value = 'add'
   resetForm()
+  dialogVisible.value = true
+}
+
+function openEditDialog(item: DictDataVO) {
+  refreshFailureNotice.value = ''
+  dialogMode.value = 'edit'
+  resetForm()
+  form.dataKey = item.dataKey
+  form.value = item.value
+  form.sort = item.sort !== undefined && item.sort !== null ? String(item.sort) : ''
+  form.remark = item.remark ?? ''
+
+  initialSnapshot.dataKey = form.dataKey
+  initialSnapshot.value = form.value
+  initialSnapshot.sort = form.sort
+  initialSnapshot.remark = form.remark
+
+  hasOriginalRemark.value = Boolean(item.remark && item.remark.trim() !== '')
+
   dialogVisible.value = true
 }
 
@@ -262,17 +319,29 @@ async function handleSubmit() {
   dialogErrorMessage.value = ''
   refreshFailureNotice.value = ''
 
+  const mode = dialogMode.value
+
   try {
     const trimmedSort = form.sort.trim()
     const sortVal = trimmedSort !== '' ? parseInt(trimmedSort, 10) : undefined
+    const trimmedRemark = form.remark.trim()
 
-    await createDictItem({
-      typeKey: typeKey.value,
-      dataKey: form.dataKey.trim(),
-      value: form.value.trim(),
-      sort: sortVal,
-      remark: form.remark.trim() ? form.remark.trim() : undefined,
-    })
+    if (mode === 'add') {
+      await createDictItem({
+        typeKey: typeKey.value,
+        dataKey: form.dataKey.trim(),
+        value: form.value.trim(),
+        sort: sortVal,
+        remark: trimmedRemark ? trimmedRemark : undefined,
+      })
+    } else {
+      await updateDictItem({
+        dataKey: form.dataKey.trim(),
+        value: form.value.trim(),
+        sort: sortVal,
+        remark: trimmedRemark ? trimmedRemark : undefined,
+      })
+    }
   } catch (err: unknown) {
     if (err instanceof ApiError && err.status === 401) {
       dialogVisible.value = false
@@ -289,12 +358,12 @@ async function handleSubmit() {
       } else if (err.status === 400) {
         dialogErrorMessage.value = '提交参数有误，请检查后重试'
       } else {
-        dialogErrorMessage.value = err.message || '新增字典项失败，请重试'
+        dialogErrorMessage.value = err.message || (mode === 'add' ? '新增字典项失败，请重试' : '保存字典项失败，请重试')
       }
     } else if (err instanceof Error && err.message) {
       dialogErrorMessage.value = err.message
     } else {
-      dialogErrorMessage.value = '新增字典项失败，请重试'
+      dialogErrorMessage.value = mode === 'add' ? '新增字典项失败，请重试' : '保存字典项失败，请重试'
     }
     return
   } finally {
@@ -304,10 +373,14 @@ async function handleSubmit() {
   dialogVisible.value = false
   resetForm()
 
-  pageNo.value = 1
   let refreshOk: boolean
   try {
-    refreshOk = await loadDictItems(lastQueryParams.value, 1, pageSize.value)
+    if (mode === 'add') {
+      pageNo.value = 1
+      refreshOk = await loadDictItems(lastQueryParams.value, 1, pageSize.value)
+    } else {
+      refreshOk = await loadDictItems(lastQueryParams.value, pageNo.value, pageSize.value)
+    }
   } catch (refreshErr: unknown) {
     refreshOk = false
     hasError.value = true
@@ -316,7 +389,9 @@ async function handleSubmit() {
 
   if (!refreshOk || hasError.value) {
     refreshFailureNotice.value =
-      '字典项创建成功，但列表刷新失败。请通过下方表格重试刷新查看最新数据，无需重复提交保存。'
+      mode === 'add'
+        ? '字典项创建成功，但列表刷新失败。请通过下方表格重试刷新查看最新数据，无需重复提交保存。'
+        : '字典项保存成功，但列表刷新失败。请通过下方表格重试刷新查看最新数据，无需重复提交保存。'
   }
 }
 
@@ -447,9 +522,11 @@ defineExpose({
   handlePrevPage,
   handleNextPage,
   openAddDialog,
+  openEditDialog,
   closeDialog,
   handleSubmit,
   dialogVisible,
+  dialogMode,
   dialogSubmitting,
   form,
 })
@@ -555,7 +632,14 @@ defineExpose({
                   </td>
                   <td class="cell-remark">{{ item.remark || '—' }}</td>
                   <td class="cell-actions">
-                    <span class="action-placeholder">新增与编辑字典项由后续票交付</span>
+                    <button
+                      type="button"
+                      class="btn-edit-dict-item"
+                      data-test="btn-edit-dict-item"
+                      @click="openEditDialog(item)"
+                    >
+                      编辑
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -618,8 +702,8 @@ defineExpose({
           <p>在所属字典类型下查看与筛选字典项，管理业务枚举的具体选项。</p>
           <div class="boundary-note">
             <span class="note-label">当前边界</span>
-            <p>当前页面支持按字典项名称（前缀）筛选查询，支持新增字典项。</p>
-            <p>编辑字典项由后续票交付，本版不提供删除或状态写入。</p>
+            <p>当前页面支持按字典项名称（前缀）筛选查询，支持新增与编辑字典项。</p>
+            <p>编辑时字典项编码只读且不可变更所属类型；清空已有备注受接口约束被明确阻止；本版不提供删除或状态写入。</p>
           </div>
         </aside>
       </div>
@@ -636,7 +720,9 @@ defineExpose({
         :before-close="handleDialogBeforeClose"
       >
         <template #header>
-          <span class="el-dialog__title" data-test="dict-item-dialog-title">新增字典项</span>
+          <span class="el-dialog__title" data-test="dict-item-dialog-title">
+            {{ dialogMode === 'add' ? '新增字典项' : '编辑字典项' }}
+          </span>
         </template>
 
         <div data-test="dict-item-dialog">
@@ -654,7 +740,8 @@ defineExpose({
                 data-test="form-data-key"
                 type="text"
                 placeholder="请输入字典项编码"
-                :disabled="dialogSubmitting"
+                :disabled="dialogSubmitting || dialogMode === 'edit'"
+                :readonly="dialogMode === 'edit'"
                 @blur="handleFieldBlur('dataKey')"
                 @input="handleFieldInput('dataKey')"
               />
@@ -697,7 +784,7 @@ defineExpose({
               </span>
             </div>
 
-            <div class="form-item">
+            <div class="form-item" :class="{ 'has-error': fieldErrors.remark }">
               <label for="form-item-remark" class="form-label">备注</label>
               <textarea
                 id="form-item-remark"
@@ -706,7 +793,12 @@ defineExpose({
                 rows="3"
                 placeholder="可选备注信息"
                 :disabled="dialogSubmitting"
+                @blur="handleFieldBlur('remark')"
+                @input="handleFieldInput('remark')"
               />
+              <span v-if="fieldErrors.remark" class="field-error" data-test="error-remark" role="alert">
+                {{ fieldErrors.remark }}
+              </span>
             </div>
 
             <div
@@ -730,7 +822,7 @@ defineExpose({
                 取消
               </button>
               <button type="submit" class="btn-submit" data-test="btn-submit-dict-item" :disabled="dialogSubmitting">
-                {{ dialogSubmitting ? '提交中...' : '确认新增' }}
+                {{ dialogSubmitting ? '提交中...' : dialogMode === 'add' ? '确认新增' : '确认保存' }}
               </button>
             </div>
           </form>
@@ -1077,6 +1169,32 @@ defineExpose({
   white-space: nowrap;
 }
 
+.btn-edit-dict-item {
+  display: inline-flex;
+  align-items: center;
+  height: 1.8rem;
+  padding: 0 0.6rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: transparent;
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  outline-offset: 2px;
+
+  &:hover {
+    background: var(--orbit-paper);
+    border-color: var(--orbit-orange);
+    color: var(--orbit-orange);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+}
+
 .action-placeholder {
   color: var(--orbit-body-muted);
   font-size: 0.82rem;
@@ -1348,7 +1466,8 @@ defineExpose({
   line-height: 1.3;
 }
 
-.form-item.has-error input {
+.form-item.has-error input,
+.form-item.has-error textarea {
   border-color: #d9534f;
 }
 

@@ -166,7 +166,7 @@ describe('dictionary item query and round-trip navigation (dict-item-query)', ()
     expect(rows[0].find('.cell-status').text()).toBe('启用')
     expect(rows[0].find('.status-badge').classes()).toContain('is-enabled')
     expect(rows[0].find('.cell-remark').text()).toBe('平台管理员角色')
-    expect(rows[0].find('.cell-actions').text()).toContain('新增与编辑字典项由后续票交付')
+    expect(rows[0].find('.cell-actions').text()).toContain('编辑')
 
     // Row 2
     expect(rows[1].find('.cell-data-key').text()).toBe('super_admin')

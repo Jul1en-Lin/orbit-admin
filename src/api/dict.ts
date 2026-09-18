@@ -175,6 +175,38 @@ export async function createDictItem(payload: {
   return response.data
 }
 
+export interface UpdateDictItemPayload {
+  dataKey: string
+  value: string
+  sort?: number
+  remark?: string | null
+}
+
+/**
+ * Update an existing dictionary item.
+ * Backend endpoint: POST /dictionary_data/edit
+ * Does not accept or send typeKey.
+ */
+export async function updateDictItem(payload: {
+  dataKey: string
+  value: string
+  sort?: number
+  remark?: string | null
+}): Promise<number> {
+  const body: Record<string, unknown> = {
+    dataKey: payload.dataKey,
+    value: payload.value,
+  }
+  if (payload.sort !== undefined) {
+    body.sort = payload.sort
+  }
+  if (payload.remark !== undefined && payload.remark !== null && payload.remark !== '') {
+    body.remark = payload.remark
+  }
+  const response = await apiClient.post<number>('/dictionary_data/edit', body)
+  return response.data
+}
+
 export interface UpdateDictTypePayload {
   typeKey: string
   value: string
