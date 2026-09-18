@@ -88,6 +88,8 @@ status: closed
 
 - [Nginx 静态托管与路由回退](issues/41-nginx-hosting.md) — 已交付 Nginx 站点与主配置示例、history 模式路由回退、静态资源 404 隔离与同源 /api 网关代理，并通过受控本地测试验证。
 
+- [部署说明与凭据边界](issues/42-deployment-notes.md) — 已交付构建、开发启动、质量门禁、模板独立复用与生产 Nginx 部署说明，明确浏览器公开凭据边界与事实阻碍记录。
+
 ## Not yet specified
 
 无剩余规划决策。后端启动、真实接口联调与上线部署验证移交实现阶段，边界见[网关配置任务的 Resolution](comments/local-gateway-access.md#resolution)；地图关闭不代表应用已实现或验收通过。
