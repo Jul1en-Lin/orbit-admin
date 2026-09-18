@@ -3,8 +3,8 @@ id: dict-item-create
 title: 字典项新增
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: worker
 order: 36
 blocked_by: ["dict-item-query"]
 ---
@@ -23,10 +23,10 @@ blocked_by: ["dict-item-query"]
 
 ## Acceptance criteria
 
-- [ ] 新增提交所属类型、编码、名称、可选排序与备注。
-- [ ] 编码与名称拒绝全空白；排序有值时为整数，不限定正数；不附加契约外的字符集或长度限制。
-- [ ] 成功关闭弹窗并刷新列表，新增后回第一页。
-- [ ] 提交、失败与不确定结果的交互沿用既有写入语义。
+- [x] 新增提交所属类型、编码、名称、可选排序与备注。
+- [x] 编码与名称拒绝全空白；排序有值时为整数，不限定正数；不附加契约外的字符集或长度限制。
+- [x] 成功关闭弹窗并刷新列表，新增后回第一页。
+- [x] 提交、失败与不确定结果的交互沿用既有写入语义。
 
 ## Blocked by
 

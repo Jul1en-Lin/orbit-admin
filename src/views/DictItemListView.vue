@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { ElDialog } from 'element-plus'
 import AppShell from '../components/AppShell.vue'
-import { fetchDictItemList, type DictDataVO } from '../api/dict'
+import { createDictItem, fetchDictItemList, type DictDataVO } from '../api/dict'
 import { ApiError } from '../api/client'
+import { useAuthStore } from '../auth/store'
 
+const auth = useAuthStore()
 const route = useRoute()
 const router = useRouter()
 
@@ -25,6 +28,297 @@ const filters = reactive({
 })
 
 const lastQueryParams = ref<{ value?: string }>({})
+
+// Modal state
+const dialogVisible = ref(false)
+const dialogSubmitting = ref(false)
+const dialogErrorMessage = ref('')
+const refreshFailureNotice = ref('')
+
+type FormFieldName = 'dataKey' | 'value' | 'sort'
+
+const form = reactive({
+  dataKey: '',
+  value: '',
+  sort: '',
+  remark: '',
+})
+
+const fieldErrors = reactive<Record<FormFieldName, string>>({
+  dataKey: '',
+  value: '',
+  sort: '',
+})
+
+const fieldTouched = reactive<Record<FormFieldName, boolean>>({
+  dataKey: false,
+  value: false,
+  sort: false,
+})
+
+function validateDataKey(): string {
+  if (!form.dataKey.trim()) {
+    return '请输入字典项编码'
+  }
+  return ''
+}
+
+function validateValue(): string {
+  if (!form.value.trim()) {
+    return '请输入字典项名称'
+  }
+  return ''
+}
+
+function validateSort(): string {
+  const trimmed = form.sort.trim()
+  if (!trimmed) {
+    return ''
+  }
+  if (!/^-?\d+$/.test(trimmed)) {
+    return '排序必须为整数'
+  }
+  return ''
+}
+
+function validateSingleField(field: FormFieldName): string {
+  let error = ''
+  if (field === 'dataKey') {
+    error = validateDataKey()
+  } else if (field === 'value') {
+    error = validateValue()
+  } else if (field === 'sort') {
+    error = validateSort()
+  }
+  fieldErrors[field] = error
+  return error
+}
+
+function handleFieldBlur(field: FormFieldName) {
+  fieldTouched[field] = true
+  validateSingleField(field)
+}
+
+function handleFieldInput(field: FormFieldName) {
+  if (fieldTouched[field]) {
+    validateSingleField(field)
+  }
+}
+
+function validateAllFields(): boolean {
+  fieldTouched.dataKey = true
+  fieldTouched.value = true
+  fieldTouched.sort = true
+
+  const keyErr = validateDataKey()
+  const valErr = validateValue()
+  const sortErr = validateSort()
+
+  fieldErrors.dataKey = keyErr
+  fieldErrors.value = valErr
+  fieldErrors.sort = sortErr
+
+  return !keyErr && !valErr && !sortErr
+}
+
+function clearFieldErrors() {
+  fieldErrors.dataKey = ''
+  fieldErrors.value = ''
+  fieldErrors.sort = ''
+  fieldTouched.dataKey = false
+  fieldTouched.value = false
+  fieldTouched.sort = false
+}
+
+function resetForm() {
+  form.dataKey = ''
+  form.value = ''
+  form.sort = ''
+  form.remark = ''
+  dialogErrorMessage.value = ''
+  clearFieldErrors()
+}
+
+const CONFIRM_DISCARD_MESSAGE = '表单有未保存的修改，确定放弃吗？'
+
+const isFormDirty = computed(() => {
+  return form.dataKey !== '' || form.value !== '' || form.sort !== '' || form.remark !== ''
+})
+
+function confirmDiscardChanges(): boolean {
+  if (!isFormDirty.value) {
+    return true
+  }
+  // eslint-disable-next-line no-undef
+  return window.confirm(CONFIRM_DISCARD_MESSAGE)
+}
+
+function openAddDialog() {
+  refreshFailureNotice.value = ''
+  resetForm()
+  dialogVisible.value = true
+}
+
+function closeDialog() {
+  if (dialogSubmitting.value) {
+    return
+  }
+  if (!confirmDiscardChanges()) {
+    return
+  }
+  dialogVisible.value = false
+  resetForm()
+}
+
+function handleDialogBeforeClose(done: () => void) {
+  if (dialogSubmitting.value) {
+    return
+  }
+  if (!confirmDiscardChanges()) {
+    return
+  }
+  resetForm()
+  done()
+}
+
+onBeforeRouteLeave(() => {
+  if (!auth.isAuthenticated || auth.sessionExpired) {
+    dialogVisible.value = false
+    resetForm()
+    return true
+  }
+
+  if (dialogVisible.value && isFormDirty.value) {
+    const ok = confirmDiscardChanges()
+    if (!ok) {
+      return false
+    }
+    dialogVisible.value = false
+    resetForm()
+    return true
+  }
+
+  if (dialogVisible.value) {
+    dialogVisible.value = false
+    resetForm()
+  }
+
+  return true
+})
+
+watch(
+  () => [auth.accessToken, auth.sessionExpired, auth.isAuthenticated],
+  () => {
+    if (!auth.isAuthenticated || auth.sessionExpired) {
+      dialogVisible.value = false
+      resetForm()
+    }
+  },
+)
+
+function isUncertainWriteError(err: unknown): boolean {
+  if (err instanceof ApiError) {
+    if (err.kind === 'timeout' || err.isTimeout) {
+      return true
+    }
+    if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || err.code === 'ERR_CANCELED') {
+      return true
+    }
+    if (typeof err.message === 'string' && /timeout|超时|abort|canceled/i.test(err.message)) {
+      return true
+    }
+  }
+  if (err && typeof err === 'object') {
+    const record = err as Record<string, unknown>
+    if (record.kind === 'timeout' || record.isTimeout === true) {
+      return true
+    }
+    if (
+      record.code === 'ECONNABORTED' ||
+      record.code === 'ETIMEDOUT' ||
+      record.code === 'ERR_CANCELED' ||
+      record.code === 'ECONNRESET'
+    ) {
+      return true
+    }
+    if (typeof record.message === 'string' && /timeout|超时|abort|canceled|econnreset/i.test(record.message)) {
+      return true
+    }
+  }
+  return false
+}
+
+async function handleSubmit() {
+  if (dialogSubmitting.value) {
+    return
+  }
+
+  const isValid = validateAllFields()
+  if (!isValid) {
+    return
+  }
+
+  dialogSubmitting.value = true
+  dialogErrorMessage.value = ''
+  refreshFailureNotice.value = ''
+
+  try {
+    const trimmedSort = form.sort.trim()
+    const sortVal = trimmedSort !== '' ? parseInt(trimmedSort, 10) : undefined
+
+    await createDictItem({
+      typeKey: typeKey.value,
+      dataKey: form.dataKey.trim(),
+      value: form.value.trim(),
+      sort: sortVal,
+      remark: form.remark.trim() ? form.remark.trim() : undefined,
+    })
+  } catch (err: unknown) {
+    if (err instanceof ApiError && err.status === 401) {
+      dialogVisible.value = false
+      resetForm()
+      return
+    }
+    if (isUncertainWriteError(err)) {
+      dialogErrorMessage.value = '提交结果未确认，请先查询核实'
+    } else if (err instanceof ApiError) {
+      if (err.kind === 'network') {
+        dialogErrorMessage.value = '网络请求失败，请稍后重试'
+      } else if (err.serverMessage) {
+        dialogErrorMessage.value = err.serverMessage
+      } else if (err.status === 400) {
+        dialogErrorMessage.value = '提交参数有误，请检查后重试'
+      } else {
+        dialogErrorMessage.value = err.message || '新增字典项失败，请重试'
+      }
+    } else if (err instanceof Error && err.message) {
+      dialogErrorMessage.value = err.message
+    } else {
+      dialogErrorMessage.value = '新增字典项失败，请重试'
+    }
+    return
+  } finally {
+    dialogSubmitting.value = false
+  }
+
+  dialogVisible.value = false
+  resetForm()
+
+  pageNo.value = 1
+  let refreshOk: boolean
+  try {
+    refreshOk = await loadDictItems(lastQueryParams.value, 1, pageSize.value)
+  } catch (refreshErr: unknown) {
+    refreshOk = false
+    hasError.value = true
+    errorMessage.value = refreshErr instanceof Error && refreshErr.message ? refreshErr.message : '加载失败，请重试'
+  }
+
+  if (!refreshOk || hasError.value) {
+    refreshFailureNotice.value =
+      '字典项创建成功，但列表刷新失败。请通过下方表格重试刷新查看最新数据，无需重复提交保存。'
+  }
+}
 
 function getStatusLabel(status: number): string {
   return status === 1 ? '启用' : '停用'
@@ -152,6 +446,12 @@ defineExpose({
   handlePageChange,
   handlePrevPage,
   handleNextPage,
+  openAddDialog,
+  closeDialog,
+  handleSubmit,
+  dialogVisible,
+  dialogSubmitting,
+  form,
 })
 </script>
 
@@ -168,6 +468,23 @@ defineExpose({
 
       <div class="dict-items-split">
         <section class="dict-items-main" aria-labelledby="dict-items-title">
+          <div v-if="refreshFailureNotice" class="refresh-notice-alert" data-test="create-refresh-warning" role="alert">
+            <div class="refresh-notice-content">
+              <span class="refresh-notice-icon" aria-hidden="true">!</span>
+              <p class="refresh-notice-text" data-test="refresh-failure-notice">
+                {{ refreshFailureNotice }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="btn-notice-dismiss"
+              data-test="btn-dismiss-refresh-notice"
+              @click="refreshFailureNotice = ''"
+            >
+              知道了
+            </button>
+          </div>
+
           <div class="back-bar">
             <button type="button" class="btn-back" data-test="btn-back-to-types" @click="goBackToTypes">
               ← 返回字典类型
@@ -192,6 +509,12 @@ defineExpose({
               <button type="button" data-test="query-reset" class="btn-reset" @click="handleReset">重置</button>
             </div>
           </form>
+
+          <div class="table-toolbar">
+            <button type="button" class="btn-add-dict-item" data-test="btn-add-dict-item" @click="openAddDialog">
+              + 新增字典项
+            </button>
+          </div>
 
           <div class="table-wrap">
             <table class="dict-table" data-test="dict-item-table">
@@ -295,11 +618,124 @@ defineExpose({
           <p>在所属字典类型下查看与筛选字典项，管理业务枚举的具体选项。</p>
           <div class="boundary-note">
             <span class="note-label">当前边界</span>
-            <p>当前页面支持按字典项名称（前缀）筛选查询。</p>
-            <p>新增与编辑字典项由后续票交付，本版不提供删除或状态写入。</p>
+            <p>当前页面支持按字典项名称（前缀）筛选查询，支持新增字典项。</p>
+            <p>编辑字典项由后续票交付，本版不提供删除或状态写入。</p>
           </div>
         </aside>
       </div>
+
+      <el-dialog
+        v-if="dialogVisible"
+        v-model="dialogVisible"
+        width="520px"
+        class="dict-item-dialog"
+        destroy-on-close
+        :close-on-click-modal="!dialogSubmitting"
+        :close-on-press-escape="!dialogSubmitting"
+        :show-close="!dialogSubmitting"
+        :before-close="handleDialogBeforeClose"
+      >
+        <template #header>
+          <span class="el-dialog__title" data-test="dict-item-dialog-title">新增字典项</span>
+        </template>
+
+        <div data-test="dict-item-dialog">
+          <form class="dict-item-form" data-test="dict-item-form" @submit.prevent="handleSubmit">
+            <div class="form-item">
+              <label for="form-item-type-key" class="form-label">所属字典类型</label>
+              <input id="form-item-type-key" :value="typeKey" data-test="form-type-key" type="text" disabled readonly />
+            </div>
+
+            <div class="form-item" :class="{ 'has-error': fieldErrors.dataKey }">
+              <label for="form-item-data-key" class="form-label required">字典项编码</label>
+              <input
+                id="form-item-data-key"
+                v-model="form.dataKey"
+                data-test="form-data-key"
+                type="text"
+                placeholder="请输入字典项编码"
+                :disabled="dialogSubmitting"
+                @blur="handleFieldBlur('dataKey')"
+                @input="handleFieldInput('dataKey')"
+              />
+              <span v-if="fieldErrors.dataKey" class="field-error" data-test="error-data-key" role="alert">
+                {{ fieldErrors.dataKey }}
+              </span>
+            </div>
+
+            <div class="form-item" :class="{ 'has-error': fieldErrors.value }">
+              <label for="form-item-value-input" class="form-label required">字典项名称</label>
+              <input
+                id="form-item-value-input"
+                v-model="form.value"
+                data-test="form-value"
+                type="text"
+                placeholder="请输入字典项名称"
+                :disabled="dialogSubmitting"
+                @blur="handleFieldBlur('value')"
+                @input="handleFieldInput('value')"
+              />
+              <span v-if="fieldErrors.value" class="field-error" data-test="error-value" role="alert">
+                {{ fieldErrors.value }}
+              </span>
+            </div>
+
+            <div class="form-item" :class="{ 'has-error': fieldErrors.sort }">
+              <label for="form-item-sort" class="form-label">排序</label>
+              <input
+                id="form-item-sort"
+                v-model="form.sort"
+                data-test="form-sort"
+                type="text"
+                placeholder="可选整数排序（支持正数、零、负数）"
+                :disabled="dialogSubmitting"
+                @blur="handleFieldBlur('sort')"
+                @input="handleFieldInput('sort')"
+              />
+              <span v-if="fieldErrors.sort" class="field-error" data-test="error-sort" role="alert">
+                {{ fieldErrors.sort }}
+              </span>
+            </div>
+
+            <div class="form-item">
+              <label for="form-item-remark" class="form-label">备注</label>
+              <textarea
+                id="form-item-remark"
+                v-model="form.remark"
+                data-test="form-remark"
+                rows="3"
+                placeholder="可选备注信息"
+                :disabled="dialogSubmitting"
+              />
+            </div>
+
+            <div
+              v-if="dialogErrorMessage"
+              class="dict-item-error-message"
+              data-test="dict-item-error-message"
+              role="alert"
+            >
+              <span class="dialog-error-icon" aria-hidden="true">!</span>
+              <span class="dialog-error-text">{{ dialogErrorMessage }}</span>
+            </div>
+
+            <div class="dialog-actions">
+              <button
+                type="button"
+                class="btn-cancel"
+                data-test="btn-cancel-dict-item"
+                :disabled="dialogSubmitting"
+                @click="closeDialog"
+              >
+                取消
+              </button>
+              <button type="submit" class="btn-submit" data-test="btn-submit-dict-item" :disabled="dialogSubmitting">
+                {{ dialogSubmitting ? '提交中...' : '确认新增' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </el-dialog>
     </div>
   </AppShell>
 </template>
@@ -341,6 +777,62 @@ defineExpose({
   grid-template-columns: minmax(0, 1fr) 280px;
   gap: 3rem;
   align-items: start;
+}
+
+.refresh-notice-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #d97706;
+  background: rgba(217, 119, 6, 0.08);
+  border-radius: 2px;
+}
+
+.refresh-notice-content {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.refresh-notice-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: #d97706;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.refresh-notice-text {
+  margin: 0;
+  color: var(--orbit-ink);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.btn-notice-dismiss {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: transparent;
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--orbit-paper);
+    border-color: var(--orbit-ink);
+  }
 }
 
 .back-bar {
@@ -447,6 +939,37 @@ defineExpose({
 
   &:hover {
     background: var(--orbit-paper);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+}
+
+.table-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.btn-add-dict-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.4rem;
+  padding: 0 1.25rem;
+  border: 0;
+  background: var(--orbit-orange);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  outline-offset: 2px;
+
+  &:hover {
+    opacity: 0.9;
   }
 
   &:focus-visible {
@@ -738,6 +1261,171 @@ defineExpose({
 .boundary-note p {
   margin: 0.4rem 0 0;
   font-size: 0.8rem;
+}
+
+:deep(.dict-item-dialog) {
+  background: var(--orbit-paper);
+  border: 1px solid var(--orbit-line-soft);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+  .el-dialog__header {
+    padding: 1.5rem 1.5rem 1rem;
+    margin-right: 0;
+    border-bottom: 1px solid var(--orbit-line-soft);
+  }
+
+  .el-dialog__title {
+    color: var(--orbit-ink);
+    font-family: var(--orbit-font-serif);
+    font-size: 1.35rem;
+    font-weight: 400;
+  }
+
+  .el-dialog__headerbtn .el-dialog__close {
+    color: var(--orbit-body-muted);
+  }
+
+  .el-dialog__body {
+    padding: 1.5rem;
+    color: var(--orbit-ink);
+  }
+}
+
+.dict-item-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-label {
+  color: var(--orbit-body-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  &.required::after {
+    content: ' *';
+    color: var(--orbit-orange);
+  }
+}
+
+.form-item input,
+.form-item textarea {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: var(--orbit-paper);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline-offset: 2px;
+  border-radius: 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+
+  &:disabled,
+  &[readonly] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, 0.03);
+  }
+}
+
+.form-item textarea {
+  resize: vertical;
+}
+
+.field-error {
+  margin-top: 0.15rem;
+  color: #d9534f;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.form-item.has-error input {
+  border-color: #d9534f;
+}
+
+.dict-item-error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  background: rgba(217, 83, 79, 0.1);
+  border-left: 3px solid #d9534f;
+  color: #d9534f;
+  font-size: 0.85rem;
+}
+
+.dialog-error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: #d9534f;
+  color: var(--orbit-paper);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.btn-cancel {
+  height: 2.4rem;
+  padding: 0 1.25rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: transparent;
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-submit {
+  height: 2.4rem;
+  padding: 0 1.5rem;
+  border: 0;
+  background: var(--orbit-orange);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 @media (max-width: 960px) {

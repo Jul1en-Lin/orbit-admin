@@ -141,6 +141,40 @@ export interface CreateDictTypePayload {
   remark?: string | null
 }
 
+export interface CreateDictItemPayload {
+  typeKey: string
+  dataKey: string
+  value: string
+  sort?: number
+  remark?: string | null
+}
+
+/**
+ * Create a new dictionary item.
+ * Backend endpoint: POST /dictionary_data/add
+ */
+export async function createDictItem(payload: {
+  typeKey: string
+  dataKey: string
+  value: string
+  sort?: number
+  remark?: string | null
+}): Promise<number> {
+  const body: Record<string, unknown> = {
+    typeKey: payload.typeKey,
+    dataKey: payload.dataKey,
+    value: payload.value,
+  }
+  if (payload.sort !== undefined) {
+    body.sort = payload.sort
+  }
+  if (payload.remark !== undefined) {
+    body.remark = payload.remark
+  }
+  const response = await apiClient.post<number>('/dictionary_data/add', body)
+  return response.data
+}
+
 export interface UpdateDictTypePayload {
   typeKey: string
   value: string
