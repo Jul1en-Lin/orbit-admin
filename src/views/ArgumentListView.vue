@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { onBeforeRouteLeave } from 'vue-router'
+import { ElDialog } from 'element-plus'
 import AppShell from '../components/AppShell.vue'
-import { fetchArgumentList, type ArgumentVO } from '../api/argument'
+import { createArgument, fetchArgumentList, updateArgument, type ArgumentVO } from '../api/argument'
 import { ApiError } from '../api/client'
+import { useAuthStore } from '../auth/store'
+
+const auth = useAuthStore()
 
 const arguments_ = ref<ArgumentVO[]>([])
 const loading = ref(false)
@@ -20,6 +25,339 @@ const filters = reactive({
 })
 
 const lastQueryParams = ref<{ configKey?: string; name?: string }>({})
+
+// Add / Edit modal state
+const dialogVisible = ref(false)
+const dialogMode = ref<'add' | 'edit'>('add')
+const dialogSubmitting = ref(false)
+const dialogErrorMessage = ref('')
+const refreshFailureNotice = ref('')
+
+type FormFieldName = 'configKey' | 'name' | 'value'
+
+const form = reactive({
+  configKey: '',
+  name: '',
+  value: '',
+  remark: '',
+})
+
+const initialSnapshot = reactive({
+  configKey: '',
+  name: '',
+  value: '',
+  remark: '',
+})
+
+const fieldErrors = reactive<Record<FormFieldName, string>>({
+  configKey: '',
+  name: '',
+  value: '',
+})
+
+const fieldTouched = reactive<Record<FormFieldName, boolean>>({
+  configKey: false,
+  name: false,
+  value: false,
+})
+
+function validateConfigKey(): string {
+  if (!form.configKey.trim()) {
+    return '请输入参数键名'
+  }
+  return ''
+}
+
+function validateName(): string {
+  if (!form.name.trim()) {
+    return '请输入参数名称'
+  }
+  return ''
+}
+
+function validateValue(): string {
+  if (!form.value || !form.value.trim()) {
+    return '请输入参数键值'
+  }
+  return ''
+}
+
+function validateSingleField(field: FormFieldName): string {
+  let error = ''
+  if (field === 'configKey') {
+    error = validateConfigKey()
+  } else if (field === 'name') {
+    error = validateName()
+  } else if (field === 'value') {
+    error = validateValue()
+  }
+  fieldErrors[field] = error
+  return error
+}
+
+function handleFieldBlur(field: FormFieldName) {
+  fieldTouched[field] = true
+  validateSingleField(field)
+}
+
+function handleFieldInput(field: FormFieldName) {
+  if (fieldTouched[field]) {
+    validateSingleField(field)
+  }
+}
+
+function validateAllFields(): boolean {
+  fieldTouched.configKey = true
+  fieldTouched.name = true
+  fieldTouched.value = true
+
+  const keyErr = validateConfigKey()
+  const nameErr = validateName()
+  const valErr = validateValue()
+
+  fieldErrors.configKey = keyErr
+  fieldErrors.name = nameErr
+  fieldErrors.value = valErr
+
+  return !keyErr && !nameErr && !valErr
+}
+
+function clearFieldErrors() {
+  fieldErrors.configKey = ''
+  fieldErrors.name = ''
+  fieldErrors.value = ''
+  fieldTouched.configKey = false
+  fieldTouched.name = false
+  fieldTouched.value = false
+}
+
+function resetForm() {
+  form.configKey = ''
+  form.name = ''
+  form.value = ''
+  form.remark = ''
+  initialSnapshot.configKey = ''
+  initialSnapshot.name = ''
+  initialSnapshot.value = ''
+  initialSnapshot.remark = ''
+  dialogErrorMessage.value = ''
+  clearFieldErrors()
+}
+
+const CONFIRM_DISCARD_MESSAGE = '表单有未保存的修改，确定放弃吗？'
+
+const isFormDirty = computed(() => {
+  if (dialogMode.value === 'add') {
+    return form.configKey !== '' || form.name !== '' || form.value !== '' || form.remark !== ''
+  }
+  return (
+    form.name !== initialSnapshot.name || form.value !== initialSnapshot.value || form.remark !== initialSnapshot.remark
+  )
+})
+
+function confirmDiscardChanges(): boolean {
+  if (!isFormDirty.value) {
+    return true
+  }
+  // eslint-disable-next-line no-undef
+  return window.confirm(CONFIRM_DISCARD_MESSAGE)
+}
+
+function openAddDialog() {
+  refreshFailureNotice.value = ''
+  dialogMode.value = 'add'
+  resetForm()
+  dialogVisible.value = true
+}
+
+function openEditDialog(item: ArgumentVO) {
+  refreshFailureNotice.value = ''
+  dialogMode.value = 'edit'
+  resetForm()
+  form.configKey = item.configKey
+  form.name = item.name
+  form.value = item.value
+  form.remark = item.remark ?? ''
+
+  initialSnapshot.configKey = form.configKey
+  initialSnapshot.name = form.name
+  initialSnapshot.value = form.value
+  initialSnapshot.remark = form.remark
+
+  dialogVisible.value = true
+}
+
+function closeDialog() {
+  if (dialogSubmitting.value) {
+    return
+  }
+  if (!confirmDiscardChanges()) {
+    return
+  }
+  dialogVisible.value = false
+  resetForm()
+}
+
+function handleDialogBeforeClose(done: () => void) {
+  if (dialogSubmitting.value) {
+    return
+  }
+  if (!confirmDiscardChanges()) {
+    return
+  }
+  resetForm()
+  done()
+}
+
+onBeforeRouteLeave(() => {
+  if (!auth.isAuthenticated || auth.sessionExpired) {
+    dialogVisible.value = false
+    resetForm()
+    return true
+  }
+
+  if (dialogVisible.value && isFormDirty.value) {
+    const ok = confirmDiscardChanges()
+    if (!ok) {
+      return false
+    }
+    dialogVisible.value = false
+    resetForm()
+    return true
+  }
+
+  if (dialogVisible.value) {
+    dialogVisible.value = false
+    resetForm()
+  }
+
+  return true
+})
+
+watch(
+  () => [auth.accessToken, auth.sessionExpired, auth.isAuthenticated],
+  () => {
+    if (!auth.isAuthenticated || auth.sessionExpired) {
+      dialogVisible.value = false
+      resetForm()
+    }
+  },
+)
+
+function isUncertainWriteError(err: unknown): boolean {
+  if (err instanceof ApiError) {
+    if (err.kind === 'timeout' || err.isTimeout) {
+      return true
+    }
+    if (err.code === 'ECONNABORTED' || err.code === 'ETIMEDOUT' || err.code === 'ERR_CANCELED') {
+      return true
+    }
+    if (typeof err.message === 'string' && /timeout|超时|abort|canceled/i.test(err.message)) {
+      return true
+    }
+  }
+  if (err && typeof err === 'object') {
+    const record = err as Record<string, unknown>
+    if (record.kind === 'timeout' || record.isTimeout === true) {
+      return true
+    }
+    if (
+      record.code === 'ECONNABORTED' ||
+      record.code === 'ETIMEDOUT' ||
+      record.code === 'ERR_CANCELED' ||
+      record.code === 'ECONNRESET'
+    ) {
+      return true
+    }
+    if (typeof record.message === 'string' && /timeout|超时|abort|canceled|econnreset/i.test(record.message)) {
+      return true
+    }
+  }
+  return false
+}
+
+async function handleSubmit() {
+  if (dialogSubmitting.value) {
+    return
+  }
+
+  const isValid = validateAllFields()
+  if (!isValid) {
+    return
+  }
+
+  dialogSubmitting.value = true
+  dialogErrorMessage.value = ''
+  refreshFailureNotice.value = ''
+
+  const mode = dialogMode.value
+
+  try {
+    const trimmedRemark = form.remark.trim()
+    const payload = {
+      configKey: form.configKey.trim(),
+      name: form.name.trim(),
+      value: form.value,
+      remark: trimmedRemark ? trimmedRemark : undefined,
+    }
+
+    if (mode === 'add') {
+      await createArgument(payload)
+    } else {
+      await updateArgument(payload)
+    }
+  } catch (err: unknown) {
+    if (err instanceof ApiError && err.status === 401) {
+      dialogVisible.value = false
+      resetForm()
+      return
+    }
+    if (isUncertainWriteError(err)) {
+      dialogErrorMessage.value = '提交结果未确认，请先查询核实'
+    } else if (err instanceof ApiError) {
+      if (err.kind === 'network') {
+        dialogErrorMessage.value = '网络请求失败，请稍后重试'
+      } else if (err.serverMessage) {
+        dialogErrorMessage.value = err.serverMessage
+      } else if (err.status === 400) {
+        dialogErrorMessage.value = '提交参数有误，请检查后重试'
+      } else {
+        dialogErrorMessage.value = err.message || (mode === 'add' ? '新增参数失败，请重试' : '保存参数失败，请重试')
+      }
+    } else if (err instanceof Error && err.message) {
+      dialogErrorMessage.value = err.message
+    } else {
+      dialogErrorMessage.value = mode === 'add' ? '新增参数失败，请重试' : '保存参数失败，请重试'
+    }
+    return
+  } finally {
+    dialogSubmitting.value = false
+  }
+
+  dialogVisible.value = false
+  resetForm()
+
+  let refreshOk: boolean
+  try {
+    if (mode === 'add') {
+      pageNo.value = 1
+      refreshOk = await loadArguments(lastQueryParams.value, 1, pageSize.value)
+    } else {
+      refreshOk = await loadArguments(lastQueryParams.value, pageNo.value, pageSize.value)
+    }
+  } catch (refreshErr: unknown) {
+    refreshOk = false
+    hasError.value = true
+    errorMessage.value = refreshErr instanceof Error && refreshErr.message ? refreshErr.message : '加载失败，请重试'
+  }
+
+  if (!refreshOk || hasError.value) {
+    refreshFailureNotice.value =
+      mode === 'add'
+        ? '参数创建成功，但列表刷新失败。请通过下方表格重试刷新查看最新数据，无需重复提交保存。'
+        : '参数保存成功，但列表刷新失败。请通过下方表格重试刷新查看最新数据，无需重复提交保存。'
+  }
+}
 
 async function loadArguments(
   queryPayload?: { configKey?: string; name?: string },
@@ -133,6 +471,16 @@ defineExpose({
   pageSize,
   totals,
   totalPages,
+  dialogVisible,
+  dialogMode,
+  dialogSubmitting,
+  dialogErrorMessage,
+  refreshFailureNotice,
+  form,
+  openAddDialog,
+  openEditDialog,
+  closeDialog,
+  handleSubmit,
   loadArguments,
   handleQuery,
   handleReset,
@@ -154,6 +502,23 @@ defineExpose({
 
       <div class="arguments-split">
         <section class="arguments-main" aria-labelledby="arguments-title">
+          <div v-if="refreshFailureNotice" class="refresh-notice-alert" data-test="create-refresh-warning" role="alert">
+            <div class="refresh-notice-content">
+              <span class="refresh-notice-icon" aria-hidden="true">!</span>
+              <p class="refresh-notice-text" data-test="refresh-failure-notice">
+                {{ refreshFailureNotice }}
+              </p>
+            </div>
+            <button
+              type="button"
+              class="btn-notice-dismiss"
+              data-test="btn-dismiss-refresh-notice"
+              @click="refreshFailureNotice = ''"
+            >
+              知道了
+            </button>
+          </div>
+
           <form class="filters-form" @submit.prevent="handleQuery">
             <div class="filter-field">
               <label for="filter-config-key">参数键名</label>
@@ -184,6 +549,12 @@ defineExpose({
               <button type="button" data-test="query-reset" class="btn-reset" @click="handleReset">重置</button>
             </div>
           </form>
+
+          <div class="table-toolbar">
+            <button type="button" class="btn-add-argument" data-test="btn-add-argument" @click="openAddDialog">
+              + 新增参数
+            </button>
+          </div>
 
           <div class="table-wrap">
             <table class="argument-table" data-test="argument-table">
@@ -218,7 +589,9 @@ defineExpose({
                   <td class="cell-value">{{ item.value }}</td>
                   <td class="cell-remark">{{ item.remark || '—' }}</td>
                   <td class="cell-actions">
-                    <span class="action-placeholder">新增与编辑参数由后续票交付</span>
+                    <button type="button" class="btn-edit" data-test="btn-edit-argument" @click="openEditDialog(item)">
+                      编辑
+                    </button>
                   </td>
                 </tr>
               </tbody>
@@ -282,10 +655,121 @@ defineExpose({
           <div class="boundary-note">
             <span class="note-label">当前边界</span>
             <p>当前页面支持按参数键名（精确）与参数名称（包含）筛选查询。</p>
-            <p>首版支持参数列表与查询；新增与编辑参数由后续票交付，本版不提供删除。</p>
+            <p>支持新增参数与编辑已有参数（参数键名只读），值以普通多行文本原样提交；首版不提供删除。</p>
           </div>
         </aside>
       </div>
+
+      <el-dialog
+        v-if="dialogVisible"
+        v-model="dialogVisible"
+        width="540px"
+        class="argument-dialog"
+        destroy-on-close
+        :close-on-click-modal="!dialogSubmitting"
+        :close-on-press-escape="!dialogSubmitting"
+        :show-close="!dialogSubmitting"
+        :before-close="handleDialogBeforeClose"
+      >
+        <template #header>
+          <span class="el-dialog__title" data-test="argument-dialog-title">
+            {{ dialogMode === 'add' ? '新增参数' : '编辑参数' }}
+          </span>
+        </template>
+
+        <div data-test="argument-dialog">
+          <form class="argument-form" data-test="argument-form" @submit.prevent="handleSubmit">
+            <div class="form-item" :class="{ 'has-error': fieldErrors.configKey }">
+              <label for="form-config-key" class="form-label required">参数键名</label>
+              <input
+                id="form-config-key"
+                v-model="form.configKey"
+                data-test="form-config-key"
+                type="text"
+                placeholder="请输入参数键名"
+                :disabled="dialogSubmitting || dialogMode === 'edit'"
+                :readonly="dialogMode === 'edit'"
+                @blur="handleFieldBlur('configKey')"
+                @input="handleFieldInput('configKey')"
+              />
+              <span v-if="fieldErrors.configKey" class="field-error" data-test="error-config-key" role="alert">
+                {{ fieldErrors.configKey }}
+              </span>
+            </div>
+
+            <div class="form-item" :class="{ 'has-error': fieldErrors.name }">
+              <label for="form-name" class="form-label required">参数名称</label>
+              <input
+                id="form-name"
+                v-model="form.name"
+                data-test="form-name"
+                type="text"
+                placeholder="请输入参数名称"
+                :disabled="dialogSubmitting"
+                @blur="handleFieldBlur('name')"
+                @input="handleFieldInput('name')"
+              />
+              <span v-if="fieldErrors.name" class="field-error" data-test="error-name" role="alert">
+                {{ fieldErrors.name }}
+              </span>
+            </div>
+
+            <div class="form-item" :class="{ 'has-error': fieldErrors.value }">
+              <label for="form-value" class="form-label required">参数键值</label>
+              <textarea
+                id="form-value"
+                v-model="form.value"
+                data-test="form-value"
+                rows="4"
+                placeholder="请输入参数键值"
+                :disabled="dialogSubmitting"
+                @blur="handleFieldBlur('value')"
+                @input="handleFieldInput('value')"
+              />
+              <span v-if="fieldErrors.value" class="field-error" data-test="error-value" role="alert">
+                {{ fieldErrors.value }}
+              </span>
+            </div>
+
+            <div class="form-item">
+              <label for="form-remark" class="form-label">备注</label>
+              <textarea
+                id="form-remark"
+                v-model="form.remark"
+                data-test="form-remark"
+                rows="3"
+                placeholder="可选备注信息"
+                :disabled="dialogSubmitting"
+              />
+            </div>
+
+            <div
+              v-if="dialogErrorMessage"
+              class="argument-error-message"
+              data-test="argument-error-message"
+              role="alert"
+            >
+              <span class="dialog-error-icon" aria-hidden="true">!</span>
+              <span class="dialog-error-text">{{ dialogErrorMessage }}</span>
+            </div>
+
+            <div class="dialog-actions">
+              <button
+                type="button"
+                class="btn-cancel"
+                data-test="btn-cancel-argument"
+                :disabled="dialogSubmitting"
+                @click="closeDialog"
+              >
+                取消
+              </button>
+              <button type="submit" class="btn-submit" data-test="btn-submit-argument" :disabled="dialogSubmitting">
+                {{ dialogSubmitting ? '提交中...' : dialogMode === 'add' ? '确认新增' : '确认保存' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </el-dialog>
     </div>
   </AppShell>
 </template>
@@ -369,6 +853,93 @@ defineExpose({
 .filter-actions {
   display: flex;
   gap: 0.75rem;
+}
+
+.table-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.25rem;
+}
+
+.btn-add-argument {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 2.4rem;
+  padding: 0 1.25rem;
+  border: 1px solid var(--orbit-orange);
+  background: var(--orbit-orange);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  outline-offset: 2px;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+}
+
+.refresh-notice-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #d97706;
+  background: rgba(217, 119, 6, 0.08);
+  border-radius: 2px;
+}
+
+.refresh-notice-content {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.refresh-notice-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  background: #d97706;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.refresh-notice-text {
+  margin: 0;
+  color: var(--orbit-ink);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.btn-notice-dismiss {
+  padding: 0.25rem 0.6rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: transparent;
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--orbit-paper);
+    border-color: var(--orbit-ink);
+  }
 }
 
 .btn-query {
@@ -492,6 +1063,28 @@ defineExpose({
 
 .cell-actions {
   white-space: nowrap;
+}
+
+.btn-edit {
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: transparent;
+  color: var(--orbit-ink);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--orbit-paper);
+    border-color: var(--orbit-orange);
+    color: var(--orbit-orange);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
 }
 
 .action-placeholder {
@@ -678,6 +1271,172 @@ defineExpose({
 .boundary-note p {
   margin: 0.4rem 0 0;
   font-size: 0.8rem;
+}
+
+:deep(.argument-dialog) {
+  background: var(--orbit-paper);
+  border: 1px solid var(--orbit-line-soft);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+
+  .el-dialog__header {
+    padding: 1.5rem 1.5rem 1rem;
+    margin-right: 0;
+    border-bottom: 1px solid var(--orbit-line-soft);
+  }
+
+  .el-dialog__title {
+    color: var(--orbit-ink);
+    font-family: var(--orbit-font-serif);
+    font-size: 1.35rem;
+    font-weight: 400;
+  }
+
+  .el-dialog__headerbtn .el-dialog__close {
+    color: var(--orbit-body-muted);
+  }
+
+  .el-dialog__body {
+    padding: 1.5rem;
+    color: var(--orbit-ink);
+  }
+}
+
+.argument-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.form-label {
+  color: var(--orbit-body-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  &.required::after {
+    content: ' *';
+    color: var(--orbit-orange);
+  }
+}
+
+.form-item input,
+.form-item textarea {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: var(--orbit-paper);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline-offset: 2px;
+  border-radius: 0;
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+
+  &:disabled,
+  &[readonly] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(0, 0, 0, 0.03);
+  }
+}
+
+.form-item textarea {
+  resize: vertical;
+}
+
+.field-error {
+  margin-top: 0.15rem;
+  color: #d9534f;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.form-item.has-error input,
+.form-item.has-error textarea {
+  border-color: #d9534f;
+}
+
+.argument-error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  background: rgba(217, 83, 79, 0.1);
+  border-left: 3px solid #d9534f;
+  color: #d9534f;
+  font-size: 0.85rem;
+}
+
+.dialog-error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: #d9534f;
+  color: var(--orbit-paper);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.btn-cancel {
+  height: 2.4rem;
+  padding: 0 1.25rem;
+  border: 1px solid var(--orbit-line-soft);
+  background: transparent;
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.btn-submit {
+  height: 2.4rem;
+  padding: 0 1.5rem;
+  border: 0;
+  background: var(--orbit-orange);
+  color: var(--orbit-ink);
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }
 
 @media (max-width: 960px) {

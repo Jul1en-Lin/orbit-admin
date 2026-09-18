@@ -3,8 +3,8 @@ id: argument-edit
 title: 参数新增与编辑
 parent: orbit-map
 labels: ["wayfinder:task", "ready-for-agent"]
-status: open
-assignee: null
+status: closed
+assignee: worker
 order: 39
 blocked_by: ["argument-list"]
 ---
@@ -23,10 +23,10 @@ blocked_by: ["argument-list"]
 
 ## Acceptance criteria
 
-- [ ] 新增与编辑提交编码、名称、值与可选备注；编辑编码只读。
-- [ ] 编码、名称与值必填且拒绝全空白；不增加契约外的字符集或长度上限。
-- [ ] 值使用普通多行文本，原样提交包括有效文本中的空白与换行，不自动解析或格式化。
-- [ ] 成功关闭并刷新，新增后回第一页、编辑保留当前页；不提供删除；写入异常行为沿用既有语义。
+- [x] 新增与编辑提交编码、名称、值与可选备注；编辑编码只读。
+- [x] 编码、名称与值必填且拒绝全空白；不增加契约外的字符集或长度上限。
+- [x] 值使用普通多行文本，原样提交包括有效文本中的空白与换行，不自动解析或格式化。
+- [x] 成功关闭并刷新，新增后回第一页、编辑保留当前页；不提供删除；写入异常行为沿用既有语义。
 
 ## Blocked by
 

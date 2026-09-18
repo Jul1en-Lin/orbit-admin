@@ -82,6 +82,8 @@ status: closed
 
 - [参数列表与筛选](issues/38-argument-list.md) — 已交付参数列表与精确/包含筛选、分页与竞态丢弃、顶栏参数导航启用及页面级测试。
 
+- [参数新增与编辑](issues/39-argument-edit.md) — 已交付参数新增与编辑弹窗、多行参数值原样提交、编码只读与全空白校验、既有写入与异常语义及页面级测试。
+
 - [本地代理与构建时配置](issues/40-dev-proxy-config.md) — 已交付 Vite 开发代理将同源 /api 重写为网关 /admin、可配置网关目标及构建时环境变量配置；实际联调待后端启动后核实。
 
 ## Not yet specified

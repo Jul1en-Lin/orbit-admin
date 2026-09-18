@@ -130,7 +130,7 @@ describe('argument list and query (argument-list)', () => {
     expect(rows[0].find('.cell-name').text()).toBe('登录验证码开关')
     expect(rows[0].find('.cell-value').text()).toBe('false')
     expect(rows[0].find('.cell-remark').text()).toBe('控制登录页面是否显示验证码')
-    expect(rows[0].find('.action-placeholder').text()).toBe('新增与编辑参数由后续票交付')
+    expect(rows[0].find('.cell-actions').text()).toContain('编辑')
 
     // Row 2
     expect(rows[1].find('.cell-config-key').text()).toBe('sys.upload.maxSize')
@@ -460,9 +460,9 @@ describe('argument list and query (argument-list)', () => {
     expect(longRow.find('.cell-remark').text()).toContain('这也是一段非常长的备注文本')
     expect(longRow.find('.cell-remark').text()).toContain('完整展示给用户')
 
-    // Operation column shows placeholder
+    // Operation column shows edit action
     for (const row of rows) {
-      expect(row.find('.action-placeholder').text()).toBe('新增与编辑参数由后续票交付')
+      expect(row.find('.cell-actions').text()).toContain('编辑')
     }
   })
 
