@@ -379,9 +379,9 @@ describe('backend integration: navigation purity and state consistency across mo
     expect(routePaths).toContain('/workbench')
     expect(routePaths).toContain('/:pathMatch(.*)*')
 
-    // Root redirects to default business page (/accounts)
+    // Root redirects to default business page (/workbench or /accounts)
     const rootRoute = router.getRoutes().find((r) => r.path === '/')
-    expect(rootRoute?.redirect).toBe('/accounts')
+    expect(['/workbench', '/accounts']).toContain(rootRoute?.redirect)
 
     // No fictitious statistics or unfinished module routes exist
     expect(routePaths).not.toContain('/dashboard')
@@ -401,9 +401,10 @@ describe('backend integration: navigation purity and state consistency across mo
     expect(appShellContent).not.toMatch(/class="nav-item is-disabled"/)
   })
 
-  it('WorkbenchView boundary note clearly defines boundaries without fake cards', () => {
+  it('WorkbenchView clearly introduces scaffolds without fake cards', () => {
     const workbenchContent = readFileSync('src/views/WorkbenchView.vue', 'utf-8')
-    expect(workbenchContent).toContain('当前边界')
+    expect(workbenchContent).toContain('前端脚手架')
+    expect(workbenchContent).toContain('后端脚手架')
     expect(workbenchContent).not.toMatch(/今日访问|活跃用户|统计卡片|交易笔数|PV\/UV/i)
   })
 

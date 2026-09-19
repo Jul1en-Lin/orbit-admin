@@ -529,7 +529,10 @@ onMounted(() => {
   <AppShell>
     <div class="accounts-page">
       <header class="page-heading">
-        <p class="section-kicker">ADMINISTRATION / 01</p>
+        <div class="heading-kicker-wrap">
+          <span class="kicker-dot" />
+          <p class="section-kicker">ADMINISTRATION / 01</p>
+        </div>
         <h1 id="accounts-title">管理端账号</h1>
         <p class="intro-copy">查看账号信息，维护系统的协作入口。</p>
       </header>
@@ -569,115 +572,159 @@ onMounted(() => {
             </button>
           </div>
 
-          <form class="filters-form" @submit.prevent="handleQuery">
-            <div class="filter-field">
-              <label for="filter-user-id">账号 ID</label>
-              <input
-                id="filter-user-id"
-                v-model="filters.userId"
-                data-test="filter-user-id"
-                type="text"
-                placeholder="精确匹配"
-                @keydown.enter.prevent="handleQuery"
-              />
+          <div class="table-card">
+            <form class="filters-form" @submit.prevent="handleQuery">
+              <div class="filter-field">
+                <label for="filter-user-id">账号 ID</label>
+                <input
+                  id="filter-user-id"
+                  v-model="filters.userId"
+                  data-test="filter-user-id"
+                  type="text"
+                  placeholder="精确匹配"
+                  @keydown.enter.prevent="handleQuery"
+                />
+              </div>
+
+              <div class="filter-field">
+                <label for="filter-phone">手机号</label>
+                <input
+                  id="filter-phone"
+                  v-model="filters.phoneNumber"
+                  data-test="filter-phone"
+                  type="text"
+                  placeholder="输入完整手机号"
+                  @keydown.enter.prevent="handleQuery"
+                />
+              </div>
+
+              <div class="filter-field">
+                <label for="filter-status">状态</label>
+                <div class="select-wrap">
+                  <select id="filter-status" v-model="filters.status" data-test="filter-status">
+                    <option value="">全部状态</option>
+                    <option
+                      v-for="item in statusOptions"
+                      :key="item.dataKey"
+                      :value="item.dataKey"
+                      :data-test="`status-option-${item.dataKey}`"
+                    >
+                      {{ item.value }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="filter-actions">
+                <button type="submit" data-test="query-submit" class="btn-query">
+                  <span>查询</span>
+                  <span class="btn-arrow">↗</span>
+                </button>
+                <button type="button" data-test="query-reset" class="btn-reset" @click="handleReset">重置</button>
+              </div>
+            </form>
+
+            <div class="table-toolbar">
+              <div class="toolbar-meta">
+                <span class="meta-dot" />
+                <span class="meta-text">账号名录列表</span>
+              </div>
+              <button type="button" class="btn-create-account" data-test="btn-create-account" @click="openCreateDialog">
+                <svg class="btn-add-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor">
+                  <path d="M8 3.5v9M3.5 8h9" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span>新增账号</span>
+              </button>
             </div>
 
-            <div class="filter-field">
-              <label for="filter-phone">手机号</label>
-              <input
-                id="filter-phone"
-                v-model="filters.phoneNumber"
-                data-test="filter-phone"
-                type="text"
-                placeholder="输入完整手机号"
-                @keydown.enter.prevent="handleQuery"
-              />
+            <div class="table-wrap">
+              <table class="account-table" data-test="account-table">
+                <thead>
+                  <tr>
+                    <th scope="col">账号 ID</th>
+                    <th scope="col">手机号</th>
+                    <th scope="col">昵称</th>
+                    <th scope="col">身份</th>
+                    <th scope="col">状态</th>
+                    <th scope="col">备注</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="loading" data-test="state-loading" class="state-row">
+                    <td colspan="6" class="cell-state is-loading">
+                      <span class="state-spinner" aria-hidden="true" />
+                      <span class="state-message">正在加载数据...</span>
+                    </td>
+                  </tr>
+                  <tr v-else-if="hasError" data-test="state-error" class="state-row is-error">
+                    <td colspan="6" class="cell-state is-error">
+                      <p class="state-message">{{ errorMessage || '数据加载失败，请重试' }}</p>
+                      <button type="button" data-test="state-retry" class="btn-retry" @click="handleRetry">重试</button>
+                    </td>
+                  </tr>
+                  <tr v-else-if="accounts.length === 0" data-test="state-empty" class="state-row is-empty">
+                    <td colspan="6" class="cell-state is-empty">
+                      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="9" stroke-width="1.5" stroke-dasharray="3 3" />
+                        <path
+                          d="M9 10h.01M15 10h.01M9.5 15a3.5 3.5 0 005 0"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                        />
+                      </svg>
+                      <span>暂无数据</span>
+                    </td>
+                  </tr>
+                  <tr v-for="account in accounts" v-else :key="account.userId" data-test="account-row">
+                    <td class="cell-id">
+                      <span class="id-tag">#{{ account.userId }}</span>
+                    </td>
+                    <td class="cell-phone">{{ account.phoneNumber }}</td>
+                    <td class="cell-nickname">
+                      <div class="user-inline">
+                        <span class="user-avatar-mini">{{ (account.nickName || 'U')[0] }}</span>
+                        <span>{{ account.nickName }}</span>
+                      </div>
+                    </td>
+                    <td class="cell-identity">
+                      <span class="identity-badge">{{ getIdentityLabel(account.identity) }}</span>
+                    </td>
+                    <td class="cell-status">
+                      <span :class="['status-badge', account.status === 'disable' ? 'is-disabled' : 'is-enabled']">
+                        <span class="badge-point" />
+                        <span>{{ getStatusLabel(account.status) }}</span>
+                      </span>
+                    </td>
+                    <td class="cell-remark">{{ account.remark || '—' }}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
 
-            <div class="filter-field">
-              <label for="filter-status">状态</label>
-              <select id="filter-status" v-model="filters.status" data-test="filter-status">
-                <option value="">全部状态</option>
-                <option
-                  v-for="item in statusOptions"
-                  :key="item.dataKey"
-                  :value="item.dataKey"
-                  :data-test="`status-option-${item.dataKey}`"
-                >
-                  {{ item.value }}
-                </option>
-              </select>
+            <div v-if="!loading && !hasError && accounts.length > 0" class="list-summary-bar">
+              <p class="list-summary">已显示全部 {{ accounts.length }} 个账号</p>
             </div>
-
-            <div class="filter-actions">
-              <button type="submit" data-test="query-submit" class="btn-query">查询 ↗</button>
-              <button type="button" data-test="query-reset" class="btn-reset" @click="handleReset">重置</button>
-            </div>
-          </form>
-
-          <div class="table-toolbar">
-            <button type="button" class="btn-create-account" data-test="btn-create-account" @click="openCreateDialog">
-              + 新增账号
-            </button>
           </div>
-
-          <div class="table-wrap">
-            <table class="account-table" data-test="account-table">
-              <thead>
-                <tr>
-                  <th scope="col">账号 ID</th>
-                  <th scope="col">手机号</th>
-                  <th scope="col">昵称</th>
-                  <th scope="col">身份</th>
-                  <th scope="col">状态</th>
-                  <th scope="col">备注</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="loading" data-test="state-loading" class="state-row">
-                  <td colspan="6" class="cell-state is-loading">
-                    <span class="state-spinner" aria-hidden="true" />
-                    <span class="state-message">正在加载数据...</span>
-                  </td>
-                </tr>
-                <tr v-else-if="hasError" data-test="state-error" class="state-row is-error">
-                  <td colspan="6" class="cell-state is-error">
-                    <p class="state-message">{{ errorMessage || '数据加载失败，请重试' }}</p>
-                    <button type="button" data-test="state-retry" class="btn-retry" @click="handleRetry">重试</button>
-                  </td>
-                </tr>
-                <tr v-else-if="accounts.length === 0" data-test="state-empty" class="state-row is-empty">
-                  <td colspan="6" class="cell-state is-empty">暂无数据</td>
-                </tr>
-                <tr v-for="account in accounts" v-else :key="account.userId" data-test="account-row">
-                  <td class="cell-id">{{ account.userId }}</td>
-                  <td class="cell-phone">{{ account.phoneNumber }}</td>
-                  <td class="cell-nickname">{{ account.nickName }}</td>
-                  <td class="cell-identity">{{ getIdentityLabel(account.identity) }}</td>
-                  <td class="cell-status">
-                    <span :class="['status-badge', account.status === 'disable' ? 'is-disabled' : 'is-enabled']">
-                      {{ getStatusLabel(account.status) }}
-                    </span>
-                  </td>
-                  <td class="cell-remark">{{ account.remark || '—' }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p v-if="!loading && !hasError && accounts.length > 0" class="list-summary">
-            已显示全部 {{ accounts.length }} 个账号
-          </p>
         </section>
 
         <aside class="accounts-rail" aria-label="当前操作边界">
-          <div class="rail-eyebrow">ACCOUNT DIRECTORY</div>
-          <h2>让协作各有所属。</h2>
-          <p>从这里查看管理端账号，精确定位协作成员。</p>
-          <div class="boundary-note">
-            <span class="note-label">当前边界</span>
-            <p>当前页面支持按 ID、手机号和状态精确查询。</p>
-            <p>首版不提供编辑、删除、重置密码或停用入口。</p>
+          <div class="rail-card">
+            <div class="rail-eyebrow">ACCOUNT DIRECTORY</div>
+            <h2>让协作各有所属。</h2>
+            <p>从这里查看管理端账号，精确定位协作成员。</p>
+
+            <div class="boundary-note">
+              <div class="boundary-header">
+                <svg class="boundary-icon" viewBox="0 0 16 16" fill="currentColor">
+                  <path
+                    d="M8 1a3.5 3.5 0 00-3.5 3.5V6H3a1 1 0 00-1 1v7a1 1 0 001 1h10a1 1 0 001-1V7a1 1 0 00-1-1h-1.5V4.5A3.5 3.5 0 008 1zm2 5H6V4.5a2 2 0 114 0V6z"
+                  />
+                </svg>
+                <span class="note-label">当前边界</span>
+              </div>
+              <p>当前页面支持按 ID、手机号和状态精确查询。</p>
+              <p>首版不提供编辑、删除、重置密码或停用入口。</p>
+            </div>
           </div>
         </aside>
       </div>
@@ -897,34 +944,59 @@ onMounted(() => {
   border-bottom: var(--orbit-content-border);
 }
 
+.heading-kicker-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.kicker-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--orbit-orange);
+}
+
 .section-kicker {
   color: var(--orbit-orange);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.18em;
+  margin: 0;
 }
 
 .page-heading h1 {
-  margin: 0.7rem 0 1rem;
+  margin: 0.5rem 0 0.75rem;
   color: var(--orbit-ink);
-  font-family: var(--orbit-font-serif);
-  font-size: clamp(2.5rem, 5vw, 4.6rem);
-  font-weight: 400;
-  line-height: 1;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .intro-copy {
   max-width: 38rem;
+  margin: 0;
   color: var(--orbit-body-muted);
-  font-size: 1.1rem;
-  line-height: 1.7;
+  font-size: 0.98rem;
+  line-height: 1.65;
 }
 
 .accounts-split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 3rem;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 2.25rem;
   align-items: start;
+}
+
+.table-card {
+  background: var(--orbit-paper);
+  border: 1px solid var(--orbit-line-soft);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -2px rgba(21, 59, 54, 0.05);
+  overflow: hidden;
 }
 
 .dict-alert {
@@ -933,35 +1005,38 @@ onMounted(() => {
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
-  padding: 0.75rem 1rem;
-  border-left: 3px solid #d9534f;
-  background: rgba(217, 83, 79, 0.08);
-  border-radius: 2px;
+  padding: 0.85rem 1.25rem;
+  border-left: 4px solid #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.06);
 }
 
 .dict-alert-content {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
 }
 
 .dict-alert-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 1.35rem;
+  height: 1.35rem;
   border-radius: 50%;
-  background: #d9534f;
+  background: #ef4444;
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .dict-alert-message {
   margin: 0;
-  color: var(--orbit-ink);
-  font-size: 0.85rem;
+  color: #991b1b;
+  font-size: 0.88rem;
+  font-weight: 500;
 }
 
 .refresh-notice-alert {
@@ -970,52 +1045,55 @@ onMounted(() => {
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
-  padding: 0.75rem 1rem;
-  border-left: 3px solid #d97706;
-  background: rgba(217, 119, 6, 0.08);
-  border-radius: 2px;
+  padding: 0.85rem 1.25rem;
+  border-left: 4px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.06);
 }
 
 .refresh-notice-content {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
 }
 
 .refresh-notice-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 1.35rem;
+  height: 1.35rem;
   border-radius: 50%;
-  background: #d97706;
+  background: #f59e0b;
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   flex-shrink: 0;
 }
 
 .refresh-notice-text {
   margin: 0;
-  color: var(--orbit-ink);
-  font-size: 0.85rem;
+  color: #92400e;
+  font-size: 0.88rem;
   line-height: 1.5;
+  font-weight: 500;
 }
 
 .btn-notice-dismiss {
-  padding: 0.3rem 0.8rem;
-  border: 1px solid var(--orbit-line-soft);
-  background: var(--orbit-paper);
-  color: var(--orbit-ink);
-  font-size: 0.8rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #92400e;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.05);
+    background: #fffbeb;
   }
 
   &:focus-visible {
@@ -1024,20 +1102,19 @@ onMounted(() => {
 }
 
 .btn-dict-retry {
-  padding: 0.3rem 0.8rem;
-  border: 1px solid var(--orbit-line-soft);
-  background: var(--orbit-paper);
-  color: var(--orbit-ink);
-  font-size: 0.8rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #991b1b;
+  font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  outline-offset: 2px;
   white-space: nowrap;
   transition: all 0.15s ease;
 
   &:hover {
-    background: var(--orbit-orange);
-    border-color: var(--orbit-orange);
+    background: #fef2f2;
   }
 
   &:focus-visible {
@@ -1052,39 +1129,47 @@ onMounted(() => {
 
 .filters-form {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) auto;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;
   gap: 1.25rem;
   align-items: end;
-  padding: 1.5rem 0;
-  border-top: 1px solid var(--orbit-line-soft);
+  padding: 1.5rem 1.75rem;
+  background: rgba(21, 59, 54, 0.02);
   border-bottom: 1px solid var(--orbit-line-soft);
 }
 
 .filter-field {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-}
+  gap: 0.45rem;
 
-.filter-field label {
-  color: var(--orbit-body-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
+  label {
+    color: var(--orbit-body-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
 
-.filter-field input,
-.filter-field select {
-  height: 2.4rem;
-  padding: 0 0.75rem;
-  border: 1px solid var(--orbit-line-soft);
-  background: var(--orbit-paper);
-  color: var(--orbit-ink);
-  font-family: inherit;
-  font-size: 0.9rem;
-  outline-offset: 2px;
+  input,
+  select {
+    height: 2.5rem;
+    padding: 0 0.85rem;
+    border: 1px solid var(--orbit-line-soft);
+    border-radius: 8px;
+    background: var(--orbit-paper);
+    color: var(--orbit-ink);
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all 0.18s ease;
 
-  &:focus-visible {
-    outline: 2px solid var(--orbit-orange);
+    &:hover {
+      border-color: rgba(21, 59, 54, 0.3);
+    }
+
+    &:focus {
+      border-color: var(--orbit-orange);
+      box-shadow: 0 0 0 3px rgba(232, 117, 59, 0.15);
+      outline: none;
+    }
   }
 }
 
@@ -1094,36 +1179,55 @@ onMounted(() => {
 }
 
 .btn-query {
-  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.5rem;
   padding: 0 1.25rem;
   border: 0;
-  background: var(--orbit-orange);
-  color: var(--orbit-ink);
-  font-weight: 600;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--orbit-orange) 0%, #ff8a4c 100%);
+  color: #0b2925;
+  font-weight: 700;
+  font-size: 0.88rem;
   cursor: pointer;
-  transition: opacity 0.15s ease;
-  outline-offset: 2px;
+  box-shadow: 0 2px 6px rgba(232, 117, 59, 0.3);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    opacity: 0.9;
+    box-shadow: 0 4px 12px rgba(232, 117, 59, 0.45);
+    transform: translateY(-1px);
+    color: #0b2925;
+  }
+
+  &:active {
+    transform: scale(0.97);
   }
 
   &:focus-visible {
     outline: 2px solid var(--orbit-orange);
   }
+}
+
+.btn-arrow {
+  font-size: 1rem;
 }
 
 .btn-reset {
-  height: 2.4rem;
+  height: 2.5rem;
   padding: 0 1rem;
   border: 1px solid var(--orbit-line-soft);
-  background: transparent;
+  border-radius: 8px;
+  background: var(--orbit-paper);
   color: var(--orbit-ink);
+  font-weight: 500;
+  font-size: 0.88rem;
   cursor: pointer;
-  outline-offset: 2px;
+  transition: all 0.15s ease;
 
   &:hover {
-    background: var(--orbit-paper);
+    background: rgba(21, 59, 54, 0.04);
+    border-color: rgba(21, 59, 54, 0.3);
   }
 
   &:focus-visible {
@@ -1131,60 +1235,120 @@ onMounted(() => {
   }
 }
 
-.btn-retry {
-  display: inline-block;
-  padding: 0.4rem 1.25rem;
-  border: 0;
-  background: var(--orbit-orange);
-  color: var(--orbit-ink);
-  font-family: inherit;
-  font-size: 0.85rem;
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.75rem 0.5rem;
+}
+
+.toolbar-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.meta-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.meta-text {
+  color: var(--orbit-body-muted);
+  font-size: 0.82rem;
   font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.btn-create-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 2.35rem;
+  padding: 0 1.15rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--orbit-orange);
+  color: #0b2925;
+  font-family: inherit;
+  font-size: 0.86rem;
+  font-weight: 700;
   cursor: pointer;
-  outline-offset: 2px;
-  transition: opacity 0.15s ease;
+  box-shadow: 0 2px 8px rgba(232, 117, 59, 0.3);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    opacity: 0.9;
+    background: var(--orbit-orange-hover);
+    box-shadow: 0 4px 14px rgba(232, 117, 59, 0.45);
+    transform: translateY(-1px);
+    color: #0b2925;
+  }
+
+  &:active {
+    transform: scale(0.97);
   }
 
   &:focus-visible {
     outline: 2px solid var(--orbit-orange);
   }
+}
+
+.btn-add-icon {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .table-wrap {
-  margin-top: 1.5rem;
   overflow-x: auto;
+  padding: 0.75rem 1.75rem 1.25rem;
 }
 
 .account-table {
   width: 100%;
   min-width: 640px;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
   font-size: 0.88rem;
 
   th {
-    padding: 1rem 0.75rem;
+    padding: 0.85rem 1rem;
     border-bottom: 1px solid var(--orbit-line-soft);
-    background: var(--orbit-paper);
+    background: rgba(21, 59, 54, 0.03);
     color: var(--orbit-body-muted);
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 600;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     white-space: nowrap;
+
+    &:first-child {
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    &:last-child {
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
   }
 
   td {
-    padding: 1rem 0.75rem;
-    border-bottom: 1px solid var(--orbit-line-soft);
+    padding: 1.05rem 1rem;
+    border-bottom: 1px solid rgba(21, 59, 54, 0.08);
     color: var(--orbit-ink);
-    vertical-align: top;
+    vertical-align: middle;
+    transition: background 0.15s ease;
   }
 
-  tbody tr:hover {
-    background: rgba(20, 42, 41, 0.04);
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr:hover td {
+    background: rgba(21, 59, 54, 0.03);
   }
 }
 
@@ -1194,26 +1358,86 @@ onMounted(() => {
   white-space: nowrap;
 }
 
+.id-tag {
+  display: inline-block;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(21, 59, 54, 0.06);
+  color: var(--orbit-ink);
+  font-family: ui-monospace, monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.user-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.user-avatar-mini {
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: rgba(232, 117, 59, 0.15);
+  color: var(--orbit-orange);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
 .cell-nickname,
 .cell-identity {
   white-space: nowrap;
 }
 
-.status-badge {
+.identity-badge {
   display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 2px;
+  padding: 0.2rem 0.65rem;
+  border-radius: 6px;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  color: #4f46e5;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
   font-size: 0.75rem;
+  font-weight: 600;
 
   &.is-enabled {
-    background: rgba(35, 60, 49, 0.15);
-    color: #233c31;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #065f46;
+
+    .badge-point {
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+    }
   }
 
   &.is-disabled {
-    background: rgba(48, 59, 53, 0.15);
-    color: #606d64;
+    background: rgba(100, 116, 139, 0.12);
+    border: 1px solid rgba(100, 116, 139, 0.25);
+    color: #475569;
+
+    .badge-point {
+      background: #94a3b8;
+    }
   }
+}
+
+.badge-point {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
 }
 
 .cell-remark {
@@ -1221,59 +1445,131 @@ onMounted(() => {
   line-height: 1.5;
   word-break: break-all;
   white-space: normal;
+  color: var(--orbit-body-muted);
 }
 
 .cell-state {
-  padding: 3.5rem 1rem !important;
+  padding: 4rem 1rem !important;
   text-align: center;
   color: var(--orbit-body-muted);
-  background: var(--orbit-paper);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+
+  &.is-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 
   &.is-error {
     color: var(--orbit-ink);
 
     .state-message {
-      color: #b33a2b;
+      color: #dc2626;
+      font-weight: 500;
     }
   }
 
   .state-message {
-    margin: 0 0 0.75rem;
+    margin: 0.5rem 0 0.85rem;
   }
 
   &.is-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--orbit-body-muted);
   }
 }
 
+.empty-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  stroke: var(--orbit-muted);
+}
+
+.state-spinner {
+  display: inline-block;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2.5px solid rgba(21, 59, 54, 0.15);
+  border-top-color: var(--orbit-orange);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.btn-retry {
+  display: inline-block;
+  padding: 0.45rem 1.35rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--orbit-orange);
+  color: #0b2925;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(232, 117, 59, 0.3);
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--orbit-orange-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+}
+
+.list-summary-bar {
+  padding: 0.75rem 1.75rem 1.25rem;
+  border-top: 1px solid var(--orbit-line-soft);
+}
+
 .list-summary {
-  margin-top: 1rem;
+  margin: 0;
   color: var(--orbit-body-muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
 }
 
 .accounts-rail {
-  padding-left: 1.5rem;
-  border-left: 1px dashed var(--orbit-line-soft);
+  position: sticky;
+  top: 5.5rem;
+}
+
+.rail-card {
+  padding: 1.75rem;
+  background: var(--orbit-paper);
+  border: 1px solid var(--orbit-line-soft);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px -2px rgba(21, 59, 54, 0.04);
 }
 
 .rail-eyebrow {
-  color: var(--orbit-body-muted);
+  color: var(--orbit-orange);
   font-family: ui-monospace, monospace;
   font-size: 0.7rem;
+  font-weight: 700;
   letter-spacing: 0.15em;
 }
 
-.accounts-rail h2 {
-  margin: 0.5rem 0 0.5rem;
+.rail-card h2 {
+  margin: 0.6rem 0 0.5rem;
   color: var(--orbit-ink);
-  font-family: var(--orbit-font-serif);
-  font-size: 1.5rem;
-  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
-.accounts-rail p {
+.rail-card p {
   margin: 0 0 1rem;
   color: var(--orbit-body-muted);
   font-size: 0.85rem;
@@ -1281,10 +1577,30 @@ onMounted(() => {
 }
 
 .boundary-note {
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
   padding: 1.25rem;
   border-left: 3px solid var(--orbit-orange);
-  background: var(--orbit-paper);
+  border-radius: 0 8px 8px 0;
+  background: rgba(21, 59, 54, 0.03);
+
+  p {
+    margin: 0.4rem 0 0;
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+}
+
+.boundary-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+}
+
+.boundary-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--orbit-orange);
 }
 
 .note-label {
@@ -1295,49 +1611,15 @@ onMounted(() => {
   text-transform: uppercase;
 }
 
-.boundary-note p {
-  margin: 0.4rem 0 0;
-  font-size: 0.8rem;
-}
-
-.table-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 1rem;
-}
-
-.btn-create-account {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  height: 2.4rem;
-  padding: 0 1.25rem;
-  border: 0;
-  background: var(--orbit-orange);
-  color: var(--orbit-ink);
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-  outline-offset: 2px;
-
-  &:hover {
-    opacity: 0.9;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--orbit-orange);
-  }
-}
-
 :deep(.account-create-dialog) {
   background: var(--orbit-paper);
   border: 1px solid var(--orbit-line-soft);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 24px 48px -12px rgba(11, 41, 37, 0.25);
+  overflow: hidden;
 
   .el-dialog__header {
-    padding: 1.5rem 1.5rem 1rem;
+    padding: 1.5rem 1.75rem 1.25rem;
     margin-right: 0;
     border-bottom: 1px solid var(--orbit-line-soft);
   }
@@ -1345,16 +1627,23 @@ onMounted(() => {
   .el-dialog__title {
     color: var(--orbit-ink);
     font-family: var(--orbit-font-serif);
-    font-size: 1.35rem;
-    font-weight: 400;
+    font-size: 1.25rem;
+    font-weight: 700;
   }
 
   .el-dialog__headerbtn .el-dialog__close {
     color: var(--orbit-body-muted);
+    font-size: 1.1rem;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: rotate(90deg);
+      color: var(--orbit-ink);
+    }
   }
 
   .el-dialog__body {
-    padding: 1.5rem;
+    padding: 1.75rem;
     color: var(--orbit-ink);
   }
 }
@@ -1362,18 +1651,18 @@ onMounted(() => {
 .create-account-form {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: 1.25rem;
 }
 
 .form-item {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .form-label {
   color: var(--orbit-body-muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
 
   &.required::after {
@@ -1385,22 +1674,25 @@ onMounted(() => {
 .form-item input,
 .form-item select,
 .form-item textarea {
-  padding: 0.55rem 0.75rem;
+  padding: 0.65rem 0.85rem;
   border: 1px solid var(--orbit-line-soft);
+  border-radius: 8px;
   background: var(--orbit-paper);
   color: var(--orbit-ink);
   font-family: inherit;
   font-size: 0.9rem;
-  outline-offset: 2px;
-  border-radius: 0;
+  transition: all 0.18s ease;
 
-  &:focus-visible {
-    outline: 2px solid var(--orbit-orange);
+  &:focus {
+    border-color: var(--orbit-orange);
+    box-shadow: 0 0 0 3px rgba(232, 117, 59, 0.15);
+    outline: none;
   }
 
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+    background: rgba(21, 59, 54, 0.03);
   }
 }
 
@@ -1409,35 +1701,42 @@ onMounted(() => {
 }
 
 .field-error {
-  margin-top: 0.15rem;
-  color: #d9534f;
+  margin-top: 0.2rem;
+  color: #dc2626;
   font-size: 0.78rem;
   line-height: 1.3;
+  font-weight: 500;
 }
 
 .form-item.has-error input,
 .form-item.has-error select {
-  border-color: #d9534f;
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.02);
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  }
 }
 
 .create-error-message {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-  background: rgba(217, 83, 79, 0.1);
-  border-left: 3px solid #d9534f;
-  color: #d9534f;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  border-left: 3px solid #ef4444;
+  color: #991b1b;
   font-size: 0.85rem;
+  font-weight: 500;
 
   &.is-uncertain {
-    background: rgba(217, 119, 6, 0.1);
-    border-left: 3px solid #d97706;
+    background: rgba(245, 158, 11, 0.08);
+    border-left: 3px solid #f59e0b;
     color: #92400e;
 
     .create-error-icon {
-      background: #d97706;
+      background: #f59e0b;
       color: #fff;
     }
   }
@@ -1447,10 +1746,10 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1.15rem;
+  height: 1.15rem;
   border-radius: 50%;
-  background: #d9534f;
+  background: #ef4444;
   color: var(--orbit-paper);
   font-size: 0.75rem;
   font-weight: 700;
@@ -1461,22 +1760,24 @@ onMounted(() => {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .btn-cancel-create {
-  height: 2.4rem;
+  height: 2.5rem;
   padding: 0 1.25rem;
   border: 1px solid var(--orbit-line-soft);
+  border-radius: 8px;
   background: transparent;
   color: var(--orbit-ink);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
 
-  &:hover {
-    background: rgba(0, 0, 0, 0.04);
+  &:hover:not(:disabled) {
+    background: rgba(21, 59, 54, 0.04);
   }
 
   &:disabled {
@@ -1486,19 +1787,28 @@ onMounted(() => {
 }
 
 .btn-submit-create {
-  height: 2.4rem;
+  height: 2.5rem;
   padding: 0 1.5rem;
   border: 0;
+  border-radius: 8px;
   background: var(--orbit-orange);
-  color: var(--orbit-ink);
+  color: #0b2925;
   font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  box-shadow: 0 2px 6px rgba(232, 117, 59, 0.3);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    background: var(--orbit-orange-hover);
+    box-shadow: 0 4px 12px rgba(232, 117, 59, 0.45);
+    transform: translateY(-1px);
+    color: #0b2925;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
   }
 
   &:disabled {
@@ -1518,10 +1828,7 @@ onMounted(() => {
   }
 
   .accounts-rail {
-    padding-left: 0;
-    border-left: 0;
-    border-top: 1px dashed var(--orbit-line-soft);
-    padding-top: 1.5rem;
+    position: static;
   }
 }
 </style>

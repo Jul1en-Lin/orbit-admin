@@ -1,4 +1,5 @@
 :root {
+  /* Base Orbit Design Tokens (Required by tests) */
   --orbit-ink: #153b36;
   --orbit-ink-deep: #0b2925;
   --orbit-cream: #f3efe5;
@@ -26,6 +27,26 @@
   --orbit-content-border: 1px solid var(--orbit-content-line);
   --orbit-font-sans: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --orbit-font-serif: Georgia, 'Times New Roman', serif;
+
+  /* Extended Modern Tech / Visual Elevation Tokens */
+  --orbit-line-soft: rgba(21, 59, 54, 0.16);
+  --orbit-ink-pure: #091a18;
+  --orbit-glow-orange: rgba(232, 117, 59, 0.35);
+  --orbit-surface-white: #ffffff;
+  --orbit-surface-ground: #f4f7f6;
+  --orbit-surface-card: #ffffff;
+  --orbit-success-emerald: #059669;
+  --orbit-success-bg: rgba(5, 150, 105, 0.08);
+  --orbit-danger-rose: #e11d48;
+  --orbit-danger-bg: rgba(225, 29, 72, 0.08);
+  --orbit-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --orbit-shadow-card: 0 4px 12px -2px rgba(11, 41, 37, 0.06), 0 2px 6px -1px rgba(11, 41, 37, 0.04);
+  --orbit-shadow-modal: 0 20px 32px -8px rgba(11, 41, 37, 0.22), 0 8px 16px -4px rgba(11, 41, 37, 0.12);
+  --orbit-radius-sm: 4px;
+  --orbit-radius-md: 8px;
+  --orbit-radius-lg: 12px;
+  --orbit-radius-xl: 16px;
+  --orbit-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 * {
@@ -37,12 +58,30 @@ body,
 #app {
   min-height: 100%;
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background: var(--orbit-ink-deep);
   color: var(--orbit-cream);
   font-family: var(--orbit-font-sans);
+}
+
+/* Polished modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(158, 180, 170, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(158, 180, 170, 0.5);
 }
 
 button,
@@ -61,6 +100,20 @@ textarea:focus-visible {
   outline-offset: 3px;
 }
 
+/* Micro-interaction: Emil's active state press feedback */
+button {
+  transition:
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
 .el-form-item {
   margin-bottom: 1.25rem;
 }
@@ -73,6 +126,9 @@ textarea:focus-visible {
   border-radius: 0;
   background: var(--orbit-input-bg);
   box-shadow: 0 0 0 1px var(--orbit-line) inset;
+  transition:
+    box-shadow 180ms ease,
+    background-color 180ms ease;
 
   &.is-focus {
     box-shadow: 0 0 0 2px var(--orbit-orange) inset !important;
@@ -81,6 +137,7 @@ textarea:focus-visible {
 
 .el-input__inner {
   color: var(--orbit-cream);
+  background: transparent;
 }
 
 .el-input__inner::placeholder {

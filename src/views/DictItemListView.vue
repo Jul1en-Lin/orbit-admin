@@ -536,7 +536,10 @@ defineExpose({
   <AppShell>
     <div class="dict-items-page">
       <header class="page-heading">
-        <p class="section-kicker">DICTIONARY / {{ typeKey }}</p>
+        <div class="heading-kicker-wrap">
+          <span class="kicker-dot" />
+          <p class="section-kicker">DICTIONARY / {{ typeKey }}</p>
+        </div>
         <h1 id="dict-items-title">字典项</h1>
         <p class="intro-copy">
           当前所属字典类型：<strong class="parent-type-key" data-test="parent-type-key">{{ typeKey }}</strong>
@@ -568,142 +571,182 @@ defineExpose({
             </button>
           </div>
 
-          <form class="filters-form" @submit.prevent="handleQuery">
-            <div class="filter-field">
-              <label for="filter-item-value">字典项名称</label>
-              <input
-                id="filter-item-value"
-                v-model="filters.value"
-                data-test="filter-value"
-                type="text"
-                placeholder="前缀匹配"
-                @keydown.enter.prevent="handleQuery"
-              />
-            </div>
+          <div class="table-card">
+            <form class="filters-form" @submit.prevent="handleQuery">
+              <div class="filter-field">
+                <label for="filter-item-value">字典项名称</label>
+                <input
+                  id="filter-item-value"
+                  v-model="filters.value"
+                  data-test="filter-value"
+                  type="text"
+                  placeholder="前缀匹配"
+                  @keydown.enter.prevent="handleQuery"
+                />
+              </div>
 
-            <div class="filter-actions">
-              <button type="submit" data-test="query-submit" class="btn-query">查询 ↗</button>
-              <button type="button" data-test="query-reset" class="btn-reset" @click="handleReset">重置</button>
-            </div>
-          </form>
+              <div class="filter-actions">
+                <button type="submit" data-test="query-submit" class="btn-query">
+                  <span>查询</span>
+                  <span class="btn-arrow">↗</span>
+                </button>
+                <button type="button" data-test="query-reset" class="btn-reset" @click="handleReset">重置</button>
+              </div>
+            </form>
 
-          <div class="table-toolbar">
-            <button type="button" class="btn-add-dict-item" data-test="btn-add-dict-item" @click="openAddDialog">
-              + 新增字典项
-            </button>
-          </div>
-
-          <div class="table-wrap">
-            <table class="dict-table" data-test="dict-item-table">
-              <thead>
-                <tr>
-                  <th scope="col">字典项编码</th>
-                  <th scope="col">名称</th>
-                  <th scope="col">排序</th>
-                  <th scope="col">状态</th>
-                  <th scope="col">备注</th>
-                  <th scope="col">操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="loading" data-test="state-loading" class="state-row">
-                  <td colspan="6" class="cell-state is-loading">
-                    <span class="state-spinner" aria-hidden="true" />
-                    <span class="state-message">正在加载数据...</span>
-                  </td>
-                </tr>
-                <tr v-else-if="hasError" data-test="state-error" class="state-row is-error">
-                  <td colspan="6" class="cell-state is-error">
-                    <p class="state-message">{{ errorMessage || '数据加载失败，请重试' }}</p>
-                    <button type="button" data-test="state-retry" class="btn-retry" @click="handleRetry">重试</button>
-                  </td>
-                </tr>
-                <tr v-else-if="dictItems.length === 0" data-test="state-empty" class="state-row is-empty">
-                  <td colspan="6" class="cell-state is-empty">暂无数据</td>
-                </tr>
-                <tr v-for="item in dictItems" v-else :key="item.id" data-test="dict-item-row">
-                  <td class="cell-data-key">{{ item.dataKey }}</td>
-                  <td class="cell-value">{{ item.value }}</td>
-                  <td class="cell-sort">{{ item.sort ?? '—' }}</td>
-                  <td class="cell-status">
-                    <span :class="['status-badge', item.status === 1 ? 'is-enabled' : 'is-disabled']">
-                      {{ getStatusLabel(item.status) }}
-                    </span>
-                  </td>
-                  <td class="cell-remark">{{ item.remark || '—' }}</td>
-                  <td class="cell-actions">
-                    <button
-                      type="button"
-                      class="btn-edit-dict-item"
-                      data-test="btn-edit-dict-item"
-                      @click="openEditDialog(item)"
-                    >
-                      编辑
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <p v-if="!loading && !hasError && dictItems.length > 0" class="list-summary">
-            已显示本页 {{ dictItems.length }} 个字典项
-          </p>
-
-          <div data-test="pagination-wrap" class="pagination-wrap">
-            <div class="pagination-info">
-              <span data-test="page-totals" class="page-totals">共 {{ totals }} 条，共 {{ totalPages }} 页</span>
-              <span data-test="page-current" class="page-current">第 {{ pageNo }} / {{ totalPages || 1 }} 页</span>
-            </div>
-
-            <div class="pagination-controls">
-              <label for="item-page-size-select" class="sr-only">每页条数</label>
-              <select
-                id="item-page-size-select"
-                v-model.number="pageSize"
-                data-test="page-size-select"
-                class="page-size-select"
-                aria-label="每页显示条数"
-                @change="handlePageSizeChange(pageSize)"
-              >
-                <option :value="10">10 条/页</option>
-                <option :value="20">20 条/页</option>
-                <option :value="50">50 条/页</option>
-              </select>
-
-              <button
-                type="button"
-                data-test="page-prev"
-                class="btn-page"
-                :disabled="pageNo <= 1"
-                aria-label="上一页"
-                @click="handlePrevPage"
-              >
-                上一页
+            <div class="table-toolbar">
+              <div class="toolbar-meta">
+                <span class="meta-dot" />
+                <span class="meta-text">字典项明细</span>
+              </div>
+              <button type="button" class="btn-add-dict-item" data-test="btn-add-dict-item" @click="openAddDialog">
+                <svg class="btn-add-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor">
+                  <path d="M8 3.5v9M3.5 8h9" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <span>新增字典项</span>
               </button>
+            </div>
 
-              <button
-                type="button"
-                data-test="page-next"
-                class="btn-page"
-                :disabled="pageNo >= totalPages || totalPages === 0"
-                aria-label="下一页"
-                @click="handleNextPage"
-              >
-                下一页
-              </button>
+            <div class="table-wrap">
+              <table class="dict-table" data-test="dict-item-table">
+                <thead>
+                  <tr>
+                    <th scope="col">字典项编码</th>
+                    <th scope="col">名称</th>
+                    <th scope="col">排序</th>
+                    <th scope="col">状态</th>
+                    <th scope="col">备注</th>
+                    <th scope="col">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="loading" data-test="state-loading" class="state-row">
+                    <td colspan="6" class="cell-state is-loading">
+                      <span class="state-spinner" aria-hidden="true" />
+                      <span class="state-message">正在加载数据...</span>
+                    </td>
+                  </tr>
+                  <tr v-else-if="hasError" data-test="state-error" class="state-row is-error">
+                    <td colspan="6" class="cell-state is-error">
+                      <p class="state-message">{{ errorMessage || '数据加载失败，请重试' }}</p>
+                      <button type="button" data-test="state-retry" class="btn-retry" @click="handleRetry">重试</button>
+                    </td>
+                  </tr>
+                  <tr v-else-if="dictItems.length === 0" data-test="state-empty" class="state-row is-empty">
+                    <td colspan="6" class="cell-state is-empty">
+                      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <circle cx="12" cy="12" r="9" stroke-width="1.5" stroke-dasharray="3 3" />
+                        <path
+                          d="M9 10h.01M15 10h.01M9.5 15a3.5 3.5 0 005 0"
+                          stroke-width="1.5"
+                          stroke-linecap="round"
+                        />
+                      </svg>
+                      <span>暂无数据</span>
+                    </td>
+                  </tr>
+                  <tr v-for="item in dictItems" v-else :key="item.id" data-test="dict-item-row">
+                    <td class="cell-data-key">
+                      <span class="code-pill">{{ item.dataKey }}</span>
+                    </td>
+                    <td class="cell-value">{{ item.value }}</td>
+                    <td class="cell-sort">
+                      <span class="sort-tag">{{ item.sort ?? '—' }}</span>
+                    </td>
+                    <td class="cell-status">
+                      <span :class="['status-badge', item.status === 1 ? 'is-enabled' : 'is-disabled']">
+                        <span class="badge-point" />
+                        <span>{{ getStatusLabel(item.status) }}</span>
+                      </span>
+                    </td>
+                    <td class="cell-remark">{{ item.remark || '—' }}</td>
+                    <td class="cell-actions">
+                      <button
+                        type="button"
+                        class="btn-edit-dict-item"
+                        data-test="btn-edit-dict-item"
+                        @click="openEditDialog(item)"
+                      >
+                        编辑
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="table-card-footer">
+              <p v-if="!loading && !hasError && dictItems.length > 0" class="list-summary">
+                已显示本页 {{ dictItems.length }} 个字典项
+              </p>
+
+              <div data-test="pagination-wrap" class="pagination-wrap">
+                <div class="pagination-info">
+                  <span data-test="page-totals" class="page-totals">共 {{ totals }} 条，共 {{ totalPages }} 页</span>
+                  <span data-test="page-current" class="page-current">第 {{ pageNo }} / {{ totalPages || 1 }} 页</span>
+                </div>
+
+                <div class="pagination-controls">
+                  <label for="item-page-size-select" class="sr-only">每页条数</label>
+                  <select
+                    id="item-page-size-select"
+                    v-model.number="pageSize"
+                    data-test="page-size-select"
+                    class="page-size-select"
+                    aria-label="每页显示条数"
+                    @change="handlePageSizeChange(pageSize)"
+                  >
+                    <option :value="10">10 条/页</option>
+                    <option :value="20">20 条/页</option>
+                    <option :value="50">50 条/页</option>
+                  </select>
+
+                  <button
+                    type="button"
+                    data-test="page-prev"
+                    class="btn-page"
+                    :disabled="pageNo <= 1"
+                    aria-label="上一页"
+                    @click="handlePrevPage"
+                  >
+                    上一页
+                  </button>
+
+                  <button
+                    type="button"
+                    data-test="page-next"
+                    class="btn-page"
+                    :disabled="pageNo >= totalPages || totalPages === 0"
+                    aria-label="下一页"
+                    @click="handleNextPage"
+                  >
+                    下一页
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         <aside class="dict-items-rail" aria-label="当前操作边界">
-          <div class="rail-eyebrow">DICTIONARY ITEMS</div>
-          <h2>维护字典项选项。</h2>
-          <p>在所属字典类型下查看与筛选字典项，管理业务枚举的具体选项。</p>
-          <div class="boundary-note">
-            <span class="note-label">当前边界</span>
-            <p>当前页面支持按字典项名称（前缀）筛选查询，支持新增与编辑字典项。</p>
-            <p>编辑时字典项编码只读且不可变更所属类型；清空已有备注受接口约束被明确阻止；本版不提供删除或状态写入。</p>
+          <div class="rail-card">
+            <div class="rail-eyebrow">DICTIONARY ITEMS</div>
+            <h2>维护字典项选项。</h2>
+            <p>在所属字典类型下查看与筛选字典项，管理业务枚举的具体选项。</p>
+            <div class="boundary-note">
+              <div class="boundary-header">
+                <svg class="boundary-icon" viewBox="0 0 16 16" fill="currentColor">
+                  <path
+                    d="M8 1a3.5 3.5 0 00-3.5 3.5V6H3a1 1 0 00-1 1v7a1 1 0 001 1h10a1 1 0 001-1V7a1 1 0 00-1-1h-1.5V4.5A3.5 3.5 0 008 1zm2 5H6V4.5a2 2 0 114 0V6z"
+                  />
+                </svg>
+                <span class="note-label">当前边界</span>
+              </div>
+              <p>当前页面支持按字典项名称（前缀）筛选查询，支持新增与编辑字典项。</p>
+              <p>
+                编辑时字典项编码只读且不可变更所属类型；清空已有备注受接口约束被明确阻止；本版不提供删除或状态写入。
+              </p>
+            </div>
           </div>
         </aside>
       </div>
@@ -834,11 +877,28 @@ defineExpose({
 
 <style lang="scss" scoped>
 .dict-items-page {
-  padding: 2.5rem 3rem 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--orbit-space-xl);
 }
 
 .page-heading {
-  margin-bottom: 2rem;
+  padding-bottom: var(--orbit-space-md);
+  border-bottom: var(--orbit-content-border);
+}
+
+.heading-kicker-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.kicker-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--orbit-orange);
 }
 
 .section-kicker {
@@ -846,22 +906,25 @@ defineExpose({
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.18em;
+  margin: 0;
 }
 
 .page-heading h1 {
-  margin: 0.7rem 0 1rem;
+  margin: 0.5rem 0 0.75rem;
   color: var(--orbit-ink);
-  font-family: var(--orbit-font-serif);
-  font-size: clamp(2.5rem, 5vw, 4.6rem);
-  font-weight: 400;
-  line-height: 1;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  font-size: clamp(2rem, 3.5vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
 }
 
 .intro-copy {
   max-width: 38rem;
+  margin: 0;
   color: var(--orbit-body-muted);
-  font-size: 1.1rem;
-  line-height: 1.7;
+  font-size: 0.98rem;
+  line-height: 1.65;
 }
 
 .parent-type-key {
@@ -871,12 +934,16 @@ defineExpose({
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--orbit-orange);
+  background: rgba(232, 117, 59, 0.1);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
 }
 
 .dict-items-split {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 3rem;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 2.25rem;
   align-items: start;
 }
 
@@ -886,85 +953,101 @@ defineExpose({
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1.5rem;
-  padding: 0.75rem 1rem;
-  border-left: 3px solid #d97706;
-  background: rgba(217, 119, 6, 0.08);
-  border-radius: 2px;
+  padding: 0.85rem 1.25rem;
+  border-left: 4px solid #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.06);
 }
 
 .refresh-notice-content {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.75rem;
 }
 
 .refresh-notice-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.2rem;
-  height: 1.2rem;
+  width: 1.35rem;
+  height: 1.35rem;
   border-radius: 50%;
-  background: #d97706;
+  background: #f59e0b;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 700;
   flex-shrink: 0;
 }
 
 .refresh-notice-text {
   margin: 0;
-  color: var(--orbit-ink);
-  font-size: 0.85rem;
-  line-height: 1.4;
+  color: #92400e;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  font-weight: 500;
 }
 
 .btn-notice-dismiss {
-  padding: 0.25rem 0.6rem;
-  border: 1px solid var(--orbit-line-soft);
-  background: transparent;
-  color: var(--orbit-ink);
-  font-family: inherit;
-  font-size: 0.75rem;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  background: #ffffff;
+  color: #92400e;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.15s ease;
 
   &:hover {
-    background: var(--orbit-paper);
-    border-color: var(--orbit-ink);
+    background: #fffbeb;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
   }
 }
 
 .back-bar {
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .btn-back {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  height: 2.4rem;
-  padding: 0 1.25rem;
+  height: 2.35rem;
+  padding: 0 1.15rem;
   border: 1px solid var(--orbit-line-soft);
-  background: transparent;
+  border-radius: 8px;
+  background: var(--orbit-paper);
   color: var(--orbit-ink);
   font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.88rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
-  outline-offset: 2px;
+  box-shadow: 0 1px 3px rgba(21, 59, 54, 0.04);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    background: var(--orbit-paper);
     border-color: var(--orbit-orange);
     color: var(--orbit-orange);
+    background: rgba(232, 117, 59, 0.05);
+    transform: translateX(-2px);
   }
 
   &:focus-visible {
     outline: 2px solid var(--orbit-orange);
   }
+}
+
+.table-card {
+  background: var(--orbit-paper);
+  border: 1px solid var(--orbit-line-soft);
+  border-radius: 16px;
+  box-shadow: 0 4px 20px -2px rgba(21, 59, 54, 0.05);
+  overflow: hidden;
 }
 
 .filters-form {
@@ -972,35 +1055,43 @@ defineExpose({
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;
   gap: 1.25rem;
   align-items: end;
-  padding: 1.5rem 0;
-  border-top: 1px solid var(--orbit-line-soft);
+  padding: 1.5rem 1.75rem;
+  background: rgba(21, 59, 54, 0.02);
   border-bottom: 1px solid var(--orbit-line-soft);
 }
 
 .filter-field {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-}
+  gap: 0.45rem;
 
-.filter-field label {
-  color: var(--orbit-body-muted);
-  font-size: 0.75rem;
-  font-weight: 600;
-}
+  label {
+    color: var(--orbit-body-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
 
-.filter-field input {
-  height: 2.4rem;
-  padding: 0 0.75rem;
-  border: 1px solid var(--orbit-line-soft);
-  background: var(--orbit-paper);
-  color: var(--orbit-ink);
-  font-family: inherit;
-  font-size: 0.9rem;
-  outline-offset: 2px;
+  input {
+    height: 2.5rem;
+    padding: 0 0.85rem;
+    border: 1px solid var(--orbit-line-soft);
+    border-radius: 8px;
+    background: var(--orbit-paper);
+    color: var(--orbit-ink);
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: all 0.18s ease;
 
-  &:focus-visible {
-    outline: 2px solid var(--orbit-orange);
+    &:hover {
+      border-color: rgba(21, 59, 54, 0.3);
+    }
+
+    &:focus {
+      border-color: var(--orbit-orange);
+      box-shadow: 0 0 0 3px rgba(232, 117, 59, 0.15);
+      outline: none;
+    }
   }
 }
 
@@ -1010,18 +1101,29 @@ defineExpose({
 }
 
 .btn-query {
-  height: 2.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 2.5rem;
   padding: 0 1.25rem;
   border: 0;
-  background: var(--orbit-orange);
-  color: var(--orbit-ink);
-  font-weight: 600;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--orbit-orange) 0%, #ff8a4c 100%);
+  color: #0b2925;
+  font-weight: 700;
+  font-size: 0.88rem;
   cursor: pointer;
-  transition: opacity 0.15s ease;
-  outline-offset: 2px;
+  box-shadow: 0 2px 6px rgba(232, 117, 59, 0.3);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    opacity: 0.9;
+    box-shadow: 0 4px 12px rgba(232, 117, 59, 0.45);
+    transform: translateY(-1px);
+    color: #0b2925;
+  }
+
+  &:active {
+    transform: scale(0.97);
   }
 
   &:focus-visible {
@@ -1029,17 +1131,25 @@ defineExpose({
   }
 }
 
+.btn-arrow {
+  font-size: 1rem;
+}
+
 .btn-reset {
-  height: 2.4rem;
+  height: 2.5rem;
   padding: 0 1rem;
   border: 1px solid var(--orbit-line-soft);
-  background: transparent;
+  border-radius: 8px;
+  background: var(--orbit-paper);
   color: var(--orbit-ink);
+  font-weight: 500;
+  font-size: 0.88rem;
   cursor: pointer;
-  outline-offset: 2px;
+  transition: all 0.15s ease;
 
   &:hover {
-    background: var(--orbit-paper);
+    background: rgba(21, 59, 54, 0.04);
+    border-color: rgba(21, 59, 54, 0.3);
   }
 
   &:focus-visible {
@@ -1049,28 +1159,58 @@ defineExpose({
 
 .table-toolbar {
   display: flex;
-  justify-content: flex-end;
-  margin-top: 1.25rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.75rem 0.5rem;
+}
+
+.toolbar-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.meta-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.meta-text {
+  color: var(--orbit-body-muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }
 
 .btn-add-dict-item {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  height: 2.4rem;
-  padding: 0 1.25rem;
+  gap: 0.45rem;
+  height: 2.35rem;
+  padding: 0 1.15rem;
   border: 0;
+  border-radius: 8px;
   background: var(--orbit-orange);
-  color: var(--orbit-ink);
+  color: #0b2925;
   font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.86rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s ease;
-  outline-offset: 2px;
+  box-shadow: 0 2px 8px rgba(232, 117, 59, 0.3);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover {
-    opacity: 0.9;
+    background: var(--orbit-orange-hover);
+    box-shadow: 0 4px 14px rgba(232, 117, 59, 0.45);
+    transform: translateY(-1px);
+    color: #0b2925;
+  }
+
+  &:active {
+    transform: scale(0.97);
   }
 
   &:focus-visible {
@@ -1078,60 +1218,59 @@ defineExpose({
   }
 }
 
-.btn-retry {
-  display: inline-block;
-  padding: 0.4rem 1.25rem;
-  border: 0;
-  background: var(--orbit-orange);
-  color: var(--orbit-ink);
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  outline-offset: 2px;
-  transition: opacity 0.15s ease;
-
-  &:hover {
-    opacity: 0.9;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--orbit-orange);
-  }
+.btn-add-icon {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .table-wrap {
-  margin-top: 1.5rem;
   overflow-x: auto;
+  padding: 0.75rem 1.75rem 1.25rem;
 }
 
 .dict-table {
   width: 100%;
   min-width: 720px;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   text-align: left;
   font-size: 0.88rem;
 
   th {
-    padding: 1rem 0.75rem;
+    padding: 0.85rem 1rem;
     border-bottom: 1px solid var(--orbit-line-soft);
-    background: var(--orbit-paper);
+    background: rgba(21, 59, 54, 0.03);
     color: var(--orbit-body-muted);
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 600;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.04em;
     white-space: nowrap;
+
+    &:first-child {
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    &:last-child {
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
   }
 
   td {
-    padding: 1rem 0.75rem;
-    border-bottom: 1px solid var(--orbit-line-soft);
+    padding: 1.05rem 1rem;
+    border-bottom: 1px solid rgba(21, 59, 54, 0.08);
     color: var(--orbit-ink);
-    vertical-align: top;
+    vertical-align: middle;
+    transition: background 0.15s ease;
   }
 
-  tbody tr:hover {
-    background: rgba(20, 42, 41, 0.04);
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr:hover td {
+    background: rgba(21, 59, 54, 0.03);
   }
 }
 
@@ -1141,8 +1280,18 @@ defineExpose({
   white-space: nowrap;
 }
 
+.code-pill {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(21, 59, 54, 0.06);
+  color: var(--orbit-ink);
+  font-weight: 600;
+}
+
 .cell-value {
   white-space: nowrap;
+  font-weight: 500;
 }
 
 .cell-sort {
@@ -1150,21 +1299,51 @@ defineExpose({
   text-align: center;
 }
 
-.status-badge {
+.sort-tag {
   display: inline-block;
-  padding: 0.15rem 0.5rem;
-  border-radius: 2px;
+  padding: 0.1rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(21, 59, 54, 0.05);
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  color: var(--orbit-body-muted);
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
   font-size: 0.75rem;
+  font-weight: 600;
 
   &.is-enabled {
-    background: rgba(35, 60, 49, 0.15);
-    color: #233c31;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    color: #065f46;
+
+    .badge-point {
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+    }
   }
 
   &.is-disabled {
-    background: rgba(48, 59, 53, 0.15);
-    color: #606d64;
+    background: rgba(100, 116, 139, 0.12);
+    border: 1px solid rgba(100, 116, 139, 0.25);
+    color: #475569;
+
+    .badge-point {
+      background: #94a3b8;
+    }
   }
+}
+
+.badge-point {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
 }
 
 .cell-remark {
@@ -1172,6 +1351,7 @@ defineExpose({
   line-height: 1.5;
   word-break: break-all;
   white-space: normal;
+  color: var(--orbit-body-muted);
 }
 
 .cell-actions {
@@ -1181,22 +1361,22 @@ defineExpose({
 .btn-edit-dict-item {
   display: inline-flex;
   align-items: center;
-  height: 1.8rem;
-  padding: 0 0.6rem;
+  height: 2rem;
+  padding: 0 0.85rem;
   border: 1px solid var(--orbit-line-soft);
-  background: transparent;
+  border-radius: 6px;
+  background: var(--orbit-paper);
   color: var(--orbit-ink);
   font-family: inherit;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
-  outline-offset: 2px;
 
   &:hover {
-    background: var(--orbit-paper);
     border-color: var(--orbit-orange);
     color: var(--orbit-orange);
+    background: rgba(232, 117, 59, 0.05);
   }
 
   &:focus-visible {
@@ -1204,41 +1384,52 @@ defineExpose({
   }
 }
 
-.action-placeholder {
-  color: var(--orbit-body-muted);
-  font-size: 0.82rem;
-}
-
 .cell-state {
-  padding: 3.5rem 1rem !important;
+  padding: 4rem 1rem !important;
   text-align: center;
   color: var(--orbit-body-muted);
-  background: var(--orbit-paper);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+
+  &.is-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 
   &.is-error {
     color: var(--orbit-ink);
 
     .state-message {
-      color: #b33a2b;
+      color: #dc2626;
+      font-weight: 500;
     }
   }
 
   .state-message {
-    margin: 0 0 0.75rem;
+    margin: 0.5rem 0 0.85rem;
   }
 
   &.is-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
     color: var(--orbit-body-muted);
   }
 }
 
+.empty-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  stroke: var(--orbit-muted);
+}
+
 .state-spinner {
   display: inline-block;
-  width: 1.25rem;
-  height: 1.25rem;
-  margin-bottom: 0.5rem;
-  border: 2px solid var(--orbit-line-soft);
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 2.5px solid rgba(21, 59, 54, 0.15);
   border-top-color: var(--orbit-orange);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -1250,10 +1441,41 @@ defineExpose({
   }
 }
 
+.btn-retry {
+  display: inline-block;
+  padding: 0.45rem 1.35rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--orbit-orange);
+  color: #0b2925;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(232, 117, 59, 0.3);
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--orbit-orange-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--orbit-orange);
+  }
+}
+
+.table-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem 1.75rem 1.5rem;
+  border-top: 1px solid var(--orbit-line-soft);
+}
+
 .list-summary {
-  margin-top: 1rem;
+  margin: 0;
   color: var(--orbit-body-muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
 }
 
 .pagination-wrap {
@@ -1262,9 +1484,6 @@ defineExpose({
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--orbit-line-soft, rgba(21, 59, 54, 0.15));
 }
 
 .pagination-info {
@@ -1288,14 +1507,20 @@ defineExpose({
 
 .page-size-select {
   height: 2.2rem;
-  padding: 0 0.6rem;
-  border: 1px solid var(--orbit-line-soft, rgba(21, 59, 54, 0.2));
+  padding: 0 0.75rem;
+  border: 1px solid var(--orbit-line-soft);
+  border-radius: 6px;
   background: var(--orbit-paper);
   color: var(--orbit-ink);
   font-family: inherit;
   font-size: 0.85rem;
   cursor: pointer;
   outline-offset: 2px;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: rgba(21, 59, 54, 0.3);
+  }
 
   &:focus-visible {
     outline: 2px solid var(--orbit-orange);
@@ -1305,7 +1530,8 @@ defineExpose({
 .btn-page {
   height: 2.2rem;
   padding: 0 1rem;
-  border: 1px solid var(--orbit-line-soft, rgba(21, 59, 54, 0.2));
+  border: 1px solid var(--orbit-line-soft);
+  border-radius: 6px;
   background: transparent;
   color: var(--orbit-ink);
   font-family: inherit;
@@ -1316,14 +1542,13 @@ defineExpose({
   transition: all 0.15s ease;
 
   &:hover:not(:disabled) {
-    background: var(--orbit-paper);
+    background: rgba(21, 59, 54, 0.05);
     border-color: var(--orbit-ink);
   }
 
   &:disabled {
     opacity: 0.35;
     cursor: not-allowed;
-    border-color: var(--orbit-line-soft, rgba(21, 59, 54, 0.15));
   }
 
   &:focus-visible {
@@ -1344,23 +1569,33 @@ defineExpose({
 }
 
 .dict-items-rail {
-  padding-left: 1.5rem;
-  border-left: 1px dashed var(--orbit-line-soft);
+  position: sticky;
+  top: 5.5rem;
+}
+
+.rail-card {
+  padding: 1.75rem;
+  background: var(--orbit-paper);
+  border: 1px solid var(--orbit-line-soft);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px -2px rgba(21, 59, 54, 0.04);
 }
 
 .rail-eyebrow {
-  color: var(--orbit-body-muted);
+  color: var(--orbit-orange);
   font-family: ui-monospace, monospace;
   font-size: 0.7rem;
+  font-weight: 700;
   letter-spacing: 0.15em;
 }
 
 .dict-items-rail h2 {
-  margin: 0.5rem 0 0.5rem;
+  margin: 0.6rem 0 0.5rem;
   color: var(--orbit-ink);
-  font-family: var(--orbit-font-serif);
-  font-size: 1.5rem;
-  font-weight: 400;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 .dict-items-rail p {
@@ -1371,10 +1606,30 @@ defineExpose({
 }
 
 .boundary-note {
-  margin-top: 1.5rem;
+  margin-top: 1.25rem;
   padding: 1.25rem;
   border-left: 3px solid var(--orbit-orange);
-  background: var(--orbit-paper);
+  border-radius: 0 8px 8px 0;
+  background: rgba(21, 59, 54, 0.03);
+
+  p {
+    margin: 0.4rem 0 0;
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+}
+
+.boundary-header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.25rem;
+}
+
+.boundary-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+  color: var(--orbit-orange);
 }
 
 .note-label {
@@ -1385,18 +1640,15 @@ defineExpose({
   text-transform: uppercase;
 }
 
-.boundary-note p {
-  margin: 0.4rem 0 0;
-  font-size: 0.8rem;
-}
-
 :deep(.dict-item-dialog) {
   background: var(--orbit-paper);
   border: 1px solid var(--orbit-line-soft);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border-radius: 16px;
+  box-shadow: 0 24px 48px -12px rgba(11, 41, 37, 0.25);
+  overflow: hidden;
 
   .el-dialog__header {
-    padding: 1.5rem 1.5rem 1rem;
+    padding: 1.5rem 1.75rem 1.25rem;
     margin-right: 0;
     border-bottom: 1px solid var(--orbit-line-soft);
   }
@@ -1404,16 +1656,23 @@ defineExpose({
   .el-dialog__title {
     color: var(--orbit-ink);
     font-family: var(--orbit-font-serif);
-    font-size: 1.35rem;
-    font-weight: 400;
+    font-size: 1.25rem;
+    font-weight: 700;
   }
 
   .el-dialog__headerbtn .el-dialog__close {
     color: var(--orbit-body-muted);
+    font-size: 1.1rem;
+    transition: transform 0.2s ease;
+
+    &:hover {
+      transform: rotate(90deg);
+      color: var(--orbit-ink);
+    }
   }
 
   .el-dialog__body {
-    padding: 1.5rem;
+    padding: 1.75rem;
     color: var(--orbit-ink);
   }
 }
@@ -1421,18 +1680,18 @@ defineExpose({
 .dict-item-form {
   display: flex;
   flex-direction: column;
-  gap: 1.15rem;
+  gap: 1.25rem;
 }
 
 .form-item {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.4rem;
 }
 
 .form-label {
   color: var(--orbit-body-muted);
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
 
   &.required::after {
@@ -1443,24 +1702,26 @@ defineExpose({
 
 .form-item input,
 .form-item textarea {
-  padding: 0.55rem 0.75rem;
+  padding: 0.65rem 0.85rem;
   border: 1px solid var(--orbit-line-soft);
+  border-radius: 8px;
   background: var(--orbit-paper);
   color: var(--orbit-ink);
   font-family: inherit;
   font-size: 0.9rem;
-  outline-offset: 2px;
-  border-radius: 0;
+  transition: all 0.18s ease;
 
-  &:focus-visible {
-    outline: 2px solid var(--orbit-orange);
+  &:focus {
+    border-color: var(--orbit-orange);
+    box-shadow: 0 0 0 3px rgba(232, 117, 59, 0.15);
+    outline: none;
   }
 
   &:disabled,
   &[readonly] {
     opacity: 0.6;
     cursor: not-allowed;
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(21, 59, 54, 0.03);
   }
 }
 
@@ -1469,37 +1730,44 @@ defineExpose({
 }
 
 .field-error {
-  margin-top: 0.15rem;
-  color: #d9534f;
+  margin-top: 0.2rem;
+  color: #dc2626;
   font-size: 0.78rem;
   line-height: 1.3;
+  font-weight: 500;
 }
 
 .form-item.has-error input,
 .form-item.has-error textarea {
-  border-color: #d9534f;
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.02);
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+  }
 }
 
 .dict-item-error-message {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-  background: rgba(217, 83, 79, 0.1);
-  border-left: 3px solid #d9534f;
-  color: #d9534f;
+  gap: 0.6rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 8px;
+  background: rgba(239, 68, 68, 0.08);
+  border-left: 3px solid #ef4444;
+  color: #991b1b;
   font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .dialog-error-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.1rem;
-  height: 1.1rem;
+  width: 1.15rem;
+  height: 1.15rem;
   border-radius: 50%;
-  background: #d9534f;
+  background: #ef4444;
   color: var(--orbit-paper);
   font-size: 0.75rem;
   font-weight: 700;
@@ -1510,22 +1778,24 @@ defineExpose({
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .btn-cancel {
-  height: 2.4rem;
+  height: 2.5rem;
   padding: 0 1.25rem;
   border: 1px solid var(--orbit-line-soft);
+  border-radius: 8px;
   background: transparent;
   color: var(--orbit-ink);
   font-family: inherit;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
 
   &:hover:not(:disabled) {
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(21, 59, 54, 0.04);
   }
 
   &:disabled {
@@ -1535,19 +1805,28 @@ defineExpose({
 }
 
 .btn-submit {
-  height: 2.4rem;
+  height: 2.5rem;
   padding: 0 1.5rem;
   border: 0;
+  border-radius: 8px;
   background: var(--orbit-orange);
-  color: var(--orbit-ink);
+  color: #0b2925;
   font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s ease;
+  box-shadow: 0 2px 6px rgba(232, 117, 59, 0.3);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 
   &:hover:not(:disabled) {
-    opacity: 0.9;
+    background: var(--orbit-orange-hover);
+    box-shadow: 0 4px 12px rgba(232, 117, 59, 0.45);
+    transform: translateY(-1px);
+    color: #0b2925;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
   }
 
   &:disabled {
@@ -1557,19 +1836,13 @@ defineExpose({
 }
 
 @media (max-width: 960px) {
-  .dict-items-page {
-    padding: 1.5rem;
-  }
-
   .dict-items-split {
     grid-template-columns: 1fr;
+    gap: 2rem;
   }
 
   .dict-items-rail {
-    padding-left: 0;
-    border-left: 0;
-    border-top: 1px dashed var(--orbit-line-soft);
-    padding-top: 2rem;
+    position: static;
   }
 }
 </style>

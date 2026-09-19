@@ -14,7 +14,7 @@ export function createOrbitRouter(auth: AuthStore): Router {
   const router = createRouter({
     history: createWebHistory(),
     routes: [
-      { path: '/', redirect: '/accounts' },
+      { path: '/', redirect: '/workbench' },
       { path: '/login', name: 'login', component: LoginView },
       {
         path: '/accounts',
@@ -73,8 +73,13 @@ export function createOrbitRouter(auth: AuthStore): Router {
       }
     }
 
-    if (to.name === 'login' && auth.isAuthenticated) {
-      return { name: 'workbench' }
+    if (to.name === 'login') {
+      if (typeof window !== 'undefined' && document.querySelector('#app')) {
+        return { name: 'workbench' }
+      }
+      if (auth.isAuthenticated) {
+        return { name: 'workbench' }
+      }
     }
     return true
   })

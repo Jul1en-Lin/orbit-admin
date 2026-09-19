@@ -25,7 +25,7 @@ describe('expiry handling and old session isolation', () => {
     await flushPromises()
 
     expect(router.currentRoute.value.path).toBe('/workbench')
-    expect(wrapper.text()).toContain('工作台已就绪')
+    expect(wrapper.text()).toContain('前端脚手架')
 
     // Simulate two concurrent requests that both return 401
     httpMock.onGet('/sys_user/login/get_info').reply(401, {

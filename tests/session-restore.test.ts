@@ -19,7 +19,7 @@ describe('session restore on page refresh', () => {
 
     // Loading state is shown while get_info is pending
     expect(wrapper.get('[role="status"]').text()).toContain('正在确认管理端账号…')
-    expect(wrapper.text()).not.toContain('工作台已就绪')
+    expect(wrapper.text()).not.toContain('前端脚手架')
 
     // Resolve get_info
     resolveInfo?.([
@@ -41,7 +41,7 @@ describe('session restore on page refresh', () => {
 
     expect(router.currentRoute.value.path).toBe('/workbench')
     expect(wrapper.text()).toContain('小 orbit')
-    expect(wrapper.text()).toContain('工作台已就绪')
+    expect(wrapper.text()).toContain('前端脚手架')
   })
 
   it('retains token and offers retry when recovery encounters server error', async () => {
