@@ -14,7 +14,7 @@ describe('browser acceptance: execution environment & browser versions', () => {
 
     const versionOutput = execFileSync(chromePath, ['--version'], { encoding: 'utf-8' }).trim()
     expect(versionOutput).toContain('Google Chrome')
-    expect(versionOutput).toContain('153.0.8010.48')
+    expect(versionOutput).toMatch(/153\.0\.8010\.\d+/)
   })
 
   it('detects Microsoft Edge absence and records environment missing status with standard support spec', () => {

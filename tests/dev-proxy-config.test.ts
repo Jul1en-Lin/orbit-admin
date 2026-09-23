@@ -15,6 +15,7 @@ describe('vite proxy configuration', () => {
     expect(viteConfig).toContain('loadEnv(mode,')
     expect(viteConfig).toContain('target: VITE_GATEWAY_TARGET')
     expect(viteConfig).toContain('changeOrigin: true')
+    expect(viteConfig).toContain('port: 18000')
   })
 
   it('rewrites /api/* to /admin/* in the proxy configuration', async () => {

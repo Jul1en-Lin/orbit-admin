@@ -23,14 +23,6 @@ function navigateTo(path: string) {
         <div class="scaffolds-grid">
           <!-- 前端脚手架卡片 -->
           <article class="scaffold-card scaffold-card--frontend">
-            <div class="card-head">
-              <div class="card-tag card-tag--purple">
-                <span class="tag-dot" />
-                <span>前端脚手架</span>
-              </div>
-              <span class="scaffold-name">Orbit Admin</span>
-            </div>
-
             <div class="card-main">
               <div class="scaffold-icon scaffold-icon--purple">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -50,83 +42,306 @@ function navigateTo(path: string) {
               Nginx 托管与同源网关代理。
             </p>
 
-            <div class="tech-pills">
-              <span class="tech-pill tech-pill--purple">Vue</span>
-              <span class="tech-pill tech-pill--purple">Vite</span>
-              <span class="tech-pill tech-pill--purple">TypeScript</span>
-              <span class="tech-pill tech-pill--purple">Pinia</span>
-              <span class="tech-pill tech-pill--purple">Vue Router</span>
-              <span class="tech-pill tech-pill--purple">Element Plus</span>
-              <span class="tech-pill tech-pill--purple">Axios</span>
+            <!-- 技术选型分类展示 -->
+            <div class="tech-categorized tech-categorized--purple">
+              <div class="tech-category-row">
+                <span class="category-name">核心框架</span>
+                <div class="category-items">
+                  <span class="tech-pill tech-pill--purple">Vue 3</span>
+                  <span class="tech-pill tech-pill--purple">Vite</span>
+                  <span class="tech-pill tech-pill--purple">TypeScript</span>
+                </div>
+              </div>
+
+              <div class="tech-category-row">
+                <span class="category-name">状态路由</span>
+                <div class="category-items">
+                  <span class="tech-pill tech-pill--purple">Pinia</span>
+                  <span class="tech-pill tech-pill--purple">Vue Router</span>
+                </div>
+              </div>
+
+              <div class="tech-category-row">
+                <span class="category-name">UI组件库</span>
+                <div class="category-items">
+                  <span class="tech-pill tech-pill--purple">Element Plus</span>
+                  <span class="tech-pill tech-pill--purple">Sass / SCSS</span>
+                </div>
+              </div>
+
+              <div class="tech-category-row">
+                <span class="category-name">网络通信</span>
+                <div class="category-items">
+                  <span class="tech-pill tech-pill--purple">Axios</span>
+                  <span class="tech-pill tech-pill--purple">Vite Proxy</span>
+                </div>
+              </div>
+
+              <div class="tech-category-row">
+                <span class="category-name">安全与规范</span>
+                <div class="category-items">
+                  <span class="tech-pill tech-pill--purple">CryptoJS</span>
+                  <span class="tech-pill tech-pill--purple">Prettier</span>
+                  <span class="tech-pill tech-pill--purple">Vitest</span>
+                </div>
+              </div>
             </div>
 
-            <!-- 公共基础部分 -->
+            <!-- 模块结构与工程树 -->
             <div class="detail-block">
-              <div class="detail-badge detail-badge--purple">公共基础部分</div>
-              <div class="feature-list">
-                <div class="feature-item">
-                  <span class="feature-bullet feature-bullet--purple" />
-                  <div class="feature-text">
-                    <strong>工程基线</strong>：Vue + Vite + Element Plus 标准工程，按需集成组件并注入深墨绿设计规范。
+              <div class="detail-badge detail-badge--purple">模块结构与工程树</div>
+              <p class="section-lead section-lead--emphasis">
+                系统按公共基础底座与核心业务功能解耦分层，采用统一网络契约与响应式状态中枢驱动：
+              </p>
+              <ol class="contract-steps">
+                <li>在 <code>api/</code> 模块中声明标准化业务请求契约与数据模型，由统一网络客户端完成信封解包。</li>
+                <li>在 <code>views/</code> 模块中通过响应式组合式 API 驱动页面渲染，具备竞态消除与脏表单防护机制。</li>
+              </ol>
+
+              <div class="project-tree">
+                <div class="tree-header">
+                  <div class="tree-window-controls">
+                    <span class="tree-dot-btn tree-dot-btn--red" />
+                    <span class="tree-dot-btn tree-dot-btn--yellow" />
+                    <span class="tree-dot-btn tree-dot-btn--green" />
                   </div>
                 </div>
-                <div class="feature-item">
-                  <span class="feature-bullet feature-bullet--purple" />
-                  <div class="feature-text">
-                    <strong>网络底座</strong>：Pinia + Axios 统一客户端，解包 <code>Result&lt;T&gt;</code>，基于
-                    <code>sessionSeq</code> 隔离晚到响应与并发 401 收敛。
+
+                <div class="tree-content">
+                  <!-- 根节点 -->
+                  <div class="tree-row tree-row--root">
+                    <span class="tree-name tree-name--root">./</span>
                   </div>
-                </div>
-                <div class="feature-item">
-                  <span class="feature-bullet feature-bullet--purple" />
-                  <div class="feature-text">
-                    <strong>路由守卫</strong>：Vue Router
-                    纯静态路由回退、受保护路由拦截、登录态静默恢复与防越权安全重定向。
+
+                  <!-- 树节点: src -->
+                  <div class="tree-row tree-row--group">
+                    <span class="tree-branch">├──</span>
+                    <span class="tree-name tree-name--group">src/</span>
+                    <span class="tree-comment"># 前端核心源码目录</span>
                   </div>
-                </div>
-                <div class="feature-item">
-                  <span class="feature-bullet feature-bullet--purple" />
-                  <div class="feature-text">
-                    <strong>安全防串序</strong>：CryptoJS AES 密码传输加密对齐后端，单调递增
-                    <code>querySeq</code> 彻底消除异步查询相互覆盖。
+
+                  <!-- 二级子包列表 -->
+                  <div class="tree-subgroup">
+                    <div class="tree-row tree-row--sub">
+                      <span class="tree-branch">├──</span>
+                      <span class="tree-name">api/</span>
+                      <span class="tree-comment"># Axios 客户端封装与业务 API 契约声明</span>
+                    </div>
+                    <div class="tree-row tree-row--sub">
+                      <span class="tree-branch">├──</span>
+                      <span class="tree-name">auth/</span>
+                      <span class="tree-comment"># Pinia 用户状态管理与 CryptoJS 密码加密</span>
+                    </div>
+                    <div class="tree-row tree-row--sub">
+                      <span class="tree-branch">├──</span>
+                      <span class="tree-name">router/</span>
+                      <span class="tree-comment"># Vue Router 实例配置与受保护路由拦截守卫</span>
+                    </div>
+                    <div class="tree-row tree-row--sub">
+                      <span class="tree-branch">├──</span>
+                      <span class="tree-name">views/</span>
+                      <span class="tree-comment"># 登录、工作台、账号、字典、参数与 404 视图</span>
+                    </div>
+                    <div class="tree-row tree-row--sub">
+                      <span class="tree-branch">├──</span>
+                      <span class="tree-name">components/</span>
+                      <span class="tree-comment"># AppShell 布局骨架、毛玻璃顶栏与主导航</span>
+                    </div>
+                    <div class="tree-row tree-row--sub">
+                      <span class="tree-branch">├──</span>
+                      <span class="tree-name">styles/</span>
+                      <span class="tree-comment"># 深墨绿设计规范与 Element Plus 主题定制</span>
+                    </div>
+                    <div class="tree-row tree-row--sub">
+                      <span class="tree-branch">└──</span>
+                      <span class="tree-name">main.ts</span>
+                      <span class="tree-comment"># 应用入口、组件全局注册与根实例挂载</span>
+                    </div>
+                  </div>
+
+                  <!-- 树节点: vite.config.ts -->
+                  <div class="tree-row">
+                    <span class="tree-branch">├──</span>
+                    <span class="tree-name">vite.config.ts</span>
+                    <span class="tree-comment"># 开发构建与反向代理跨域配置</span>
+                  </div>
+
+                  <!-- 树节点: .env.* -->
+                  <div class="tree-row">
+                    <span class="tree-branch">├──</span>
+                    <span class="tree-name">.env.*</span>
+                    <span class="tree-comment"># 开发、预发布与生产多环境变量配置</span>
+                  </div>
+
+                  <!-- 树节点: deploy -->
+                  <div class="tree-row">
+                    <span class="tree-branch">└──</span>
+                    <span class="tree-name">deploy/nginx/</span>
+                    <span class="tree-comment"># 纯静态托管部署与同源反向代理网关配置</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- 公共业务部分 -->
+            <!-- 核心业务功能 -->
             <div class="detail-block detail-block--separated">
-              <div class="detail-badge detail-badge--purple">公共业务部分</div>
+              <div class="detail-badge detail-badge--purple">核心业务功能</div>
               <div class="feature-list">
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--purple" />
                   <div class="feature-text">
-                    <strong>登录页</strong>：账号密码表单校验、AES
-                    密文加密通信、防重复提交互斥锁与失效感知平滑重试降级。
+                    <strong>参数设置</strong>：全局参数热刷新
+                    <ol>
+                      <li><strong>拦截校验</strong>：校验并拦截纯空格内容，避免写入空配置引发微服务解析异常。</li>
+                      <li>
+                        <strong>运行时即时生效</strong>：直连微服务参数接口保存配置，微服务读取后即时更新，无需重启。
+                      </li>
+                      <li>
+                        <strong>原生格式支持</strong>：配置框支持原始缩进和换行，支持 JSON、规则串与长文本内容的存储。
+                      </li>
+                    </ol>
                   </div>
                 </div>
+
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--purple" />
                   <div class="feature-text">
-                    <strong>布局页</strong>：AppShell 毛玻璃吸顶顶栏骨架、品牌工作台跳转、主导航指示器及一键安全退出。
+                    <strong>字典管理</strong>：维护通用业务标签
+                    <ol>
+                      <li>
+                        <strong>类型与字典项分层</strong>：按类型与数据值两层维护，支持从类型列表下钻配置具体枚举项。
+                      </li>
+                      <li>
+                        <strong>表单交互对齐</strong
+                        >：结合后端字段约束，在前端校验拦截非法清空等操作，避免产生无意义的报错请求。
+                      </li>
+                    </ol>
                   </div>
                 </div>
+
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--purple" />
                   <div class="feature-text">
-                    <strong>用户管理</strong>：平台账号检索、字典动态映射驱动、超时未确认防重复提交与脏表单防丢失。
+                    <strong>登录与认证</strong>：账号登录和初始化会话流程
+                    <ol>
+                      <li>
+                        <strong>密码加密传输</strong>：提交前使用 AES
+                        对称加密密码，与后端解密逻辑对齐，避免明文在链路中传输。
+                      </li>
+                      <li>
+                        <strong>重定向地址过滤</strong
+                        >：登录成功后跳转到来源页面时，只允许站内相对路径，过滤双斜杠等异常地址，防止跳往外部钓鱼站点。
+                      </li>
+                      <li>
+                        <strong>提交防重与状态复位</strong
+                        >：登录请求期间锁定按钮，防止连击重复提交；请求返回或发生异常后均能复位加载状态，并给出对应提示。
+                      </li>
+                    </ol>
                   </div>
                 </div>
+
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--purple" />
                   <div class="feature-text">
-                    <strong>系统管理</strong>：字典类型分页与同构增改、字典项维护；参数精准匹配与多行文本灵活配置。
+                    <strong>用户管理</strong>：账号维护与操作防护
+                    <ol>
+                      <li>
+                        <strong>数据提交与刷新分离</strong
+                        >：数据保存成功但后续自动刷新列表失败时，主动提示已保存成功并打断操作，避免误判重复提交。
+                      </li>
+                      <li>
+                        <strong>查询序号防乱序</strong
+                        >：进行检索和分页查询时携带唯一自增序号，只采用最新发出的请求响应，丢弃迟到的旧响应，避免慢请求覆盖快请求。
+                      </li>
+                    </ol>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <!-- 基础组件库 -->
+            <div class="detail-block detail-block--separated">
+              <div class="detail-badge detail-badge--purple">基础组件库</div>
+              <div class="feature-list">
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--purple" />
                   <div class="feature-text">
-                    <strong>错误页</strong>：404 未定义路径全匹配捕获、深墨绿视觉轨道呈现与一键安全返回管理端工作台。
+                    <strong>工程规范与格式化</strong>
+                    <ol>
+                      <li>
+                        <strong>自动化校验</strong>：配置格式检查与一键修复脚本，与 ESLint 协同保证提交代码的整洁一致。
+                      </li>
+                      <li>
+                        <strong>统一代码风格</strong>：通过 Prettier
+                        约束单引号、无分号与行宽等排版规则，避免多人协作时产生无意义的格式差异与 Git 冲突。
+                      </li>
+                    </ol>
+                  </div>
+                </div>
+
+                <div class="feature-item">
+                  <span class="feature-bullet feature-bullet--purple" />
+                  <div class="feature-text">
+                    <strong>静态部署与反向代理</strong>
+                    <ol>
+                      <li>
+                        <strong>网关反向代理</strong>：统一将
+                        <code>/api</code> 代理到后端网关，开发环境与生产环境均无需额外处理浏览器跨域限制。
+                      </li>
+                      <li>
+                        <strong>路由回退</strong>：Nginx 配置所有路径回退到入口文件，入口 HTML
+                        设置不缓存，保证发版后及时拿到新资源。
+                      </li>
+                    </ol>
+                  </div>
+                </div>
+
+                <div class="feature-item">
+                  <span class="feature-bullet feature-bullet--purple" />
+                  <div class="feature-text">
+                    <strong>路由拦截与权限控制</strong>
+                    <ol>
+                      <li>
+                        <strong>已登录防重跳</strong>：已处于登录状态的用户访问登录页时，自动跳往工作台，避免重复登录。
+                      </li>
+                      <li>
+                        <strong>受保护路由拦截</strong
+                        >：页面配置鉴权标记后，未登录用户访问会被拦截并导向登录页，同时记录来源地址用于登录后回跳。
+                      </li>
+                    </ol>
+                  </div>
+                </div>
+
+                <div class="feature-item">
+                  <span class="feature-bullet feature-bullet--purple" />
+                  <div class="feature-text">
+                    <strong>网络请求封装</strong>
+                    <ol>
+                      <li>
+                        <strong>统一信封解包</strong
+                        >：拦截器自动校验业务状态码，正常时直接解出数据对象交给业务层，简化调用方逻辑。
+                      </li>
+                      <li>
+                        <strong>错误分类处理</strong>：统一捕获业务未通过、HTTP
+                        状态错误、接口超时和网络中断等四类异常，输出格式化的错误信息。
+                      </li>
+                    </ol>
+                  </div>
+                </div>
+
+                <div class="feature-item">
+                  <span class="feature-bullet feature-bullet--purple" />
+                  <div class="feature-text">
+                    <strong>会话恢复与持久化</strong>
+                    <ol>
+                      <li>
+                        <strong>状态持久化同步</strong>：在状态仓库中维护 Token 与用户信息，同步到浏览器本地存储。
+                      </li>
+                      <li>
+                        <strong>并发恢复去重</strong>：页面刷新或路由拦截同时触发会话恢复时，合并复用同一个在途
+                        Promise，避免重复请求个人信息接口。
+                      </li>
+                    </ol>
                   </div>
                 </div>
               </div>
@@ -135,14 +350,6 @@ function navigateTo(path: string) {
 
           <!-- 后端脚手架卡片 -->
           <article class="scaffold-card scaffold-card--backend">
-            <div class="card-head">
-              <div class="card-tag card-tag--teal">
-                <span class="tag-dot tag-dot--teal" />
-                <span>后端脚手架</span>
-              </div>
-              <span class="scaffold-name">Framework-Java</span>
-            </div>
-
             <div class="card-main">
               <div class="scaffold-icon scaffold-icon--teal">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -222,9 +429,7 @@ function navigateTo(path: string) {
                 <li>
                   在 <code>*-api</code> 模块中声明 <code>FeignClient</code> 接口，包含方法路径、入参注解和返回值。
                 </li>
-                <li>
-                  在 <code>*-service</code> 模块的 Controller 中直接实现对应的 <code>FeignClient</code> 接口。
-                </li>
+                <li>在 <code>*-service</code> 模块的 Controller 中直接实现对应的 <code>FeignClient</code> 接口。</li>
               </ol>
 
               <div class="project-tree">
@@ -239,7 +444,7 @@ function navigateTo(path: string) {
                 <div class="tree-content">
                   <!-- 根节点 -->
                   <div class="tree-row tree-row--root">
-                    <span class="tree-name tree-name--root">Framework-Java/</span>
+                    <span class="tree-name tree-name--root">./</span>
                   </div>
 
                   <!-- 树节点: lien-gateway -->
@@ -347,31 +552,21 @@ function navigateTo(path: string) {
                     <strong>后台管理服务</strong>：承载后台管理系统运营功能
                     <ol>
                       <li>
-                        <strong>参数服务</strong>：系统运行时支持动态配置各种参数，微服务按配置键实时读取全局参数，减少业务常量硬编码。
+                        <strong>参数服务</strong
+                        >：系统运行时支持动态配置各种参数，微服务按配置键实时读取全局参数，减少业务常量硬编码。
                       </li>
                       <li>
-                        <strong>字典服务</strong>：维护字典类型与字典数据项。除后台基础增删改查外，对外提供 Feign 接口远程调用，支持单类型查询、多类型批量查询以及按 key 获取字典项功能。
+                        <strong>字典服务</strong>：维护字典类型与字典数据项。除后台基础增删改查外，对外提供 Feign
+                        接口远程调用，支持单类型查询、多类型批量查询以及按 key 获取字典项功能。
                       </li>
                       <li>
-                        <strong>用户管理</strong>：统一管理 B 端管理员与 C 端用户档案。手机号入库前进行对称加密存储，登录密码支持前端密文传输并在后端加盐校验比对，支持账号禁用与状态流转控制。
+                        <strong>用户管理</strong>：统一管理 B 端管理员与 C
+                        端用户档案。手机号入库前进行对称加密存储，登录密码支持前端密文传输并在后端加盐校验比对，支持账号禁用与状态流转控制。
                       </li>
                       <li>
-                        <strong>地图与区划服务</strong>：内置全国省市区三级行政区划数据，支持多层级查询、热门城市以及城市拼音首字母（A~Z）索引归类；服务启动时自动对城市区划数据进行两级缓存预热，减少启动时的首次访问负担。同时集成第三方腾讯地图服务，实现 POI 关键词搜索和经纬度逆地址解析。
-                      </li>
-                    </ol>
-                  </div>
-                </div>
-
-                <div class="feature-item">
-                  <span class="feature-bullet feature-bullet--teal" />
-                  <div class="feature-text">
-                    <strong>业务微服务工程模板</strong>：为新创建的业务微服务提供标准参考工程，分为 api 接口与 service 实现模块
-                    <ol>
-                      <li>
-                        <strong>核心功能支持</strong>：内置两级缓存读写与回填、异步线程池任务调度，以及消息队列生产消费与监听处理的完整示例。
-                      </li>
-                      <li>
-                        <strong>预置配置</strong>：包含服务注册发现、集中式配置读取、数据库持久化及代码分层规范，复制工程即可快速开启新业务开发。
+                        <strong>地图与区划服务</strong
+                        >：内置全国省市区三级行政区划数据，支持多层级查询、热门城市以及城市拼音首字母（A~Z）索引归类；服务启动时自动对城市区划数据进行两级缓存预热，减少启动时的首次访问负担。同时集成第三方腾讯地图服务，实现
+                        POI 关键词搜索和经纬度逆地址解析。
                       </li>
                     </ol>
                   </div>
@@ -380,16 +575,36 @@ function navigateTo(path: string) {
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--teal" />
                   <div class="feature-text">
-                    <strong>对象存储服务</strong>：提供统一的文件存储抽象接口，屏蔽底层云厂商 SDK 封装细节，当前对接阿里云 OSS
+                    <strong>业务微服务工程模板</strong>：为新创建的业务微服务提供标准参考工程，分为 api 接口与 service
+                    实现模块
                     <ol>
                       <li>
-                        <strong>文件访问与预览</strong>：提供带签名或公网地址的文件路径拼装，可直接访问下载。
+                        <strong>核心功能支持</strong
+                        >：内置两级缓存读写与回填、异步线程池任务调度，以及消息队列生产消费与监听处理的完整示例。
                       </li>
                       <li>
-                        <strong>后端中继上传</strong>：微服务接收文件输入流，生成 UUID 路径前缀保证文件不重名，调用 OSSClient 上传，并设置公共读权限。
+                        <strong>预置配置</strong
+                        >：包含服务注册发现、集中式配置读取、数据库持久化及代码分层规范，复制工程即可快速开启新业务开发。
+                      </li>
+                    </ol>
+                  </div>
+                </div>
+
+                <div class="feature-item">
+                  <span class="feature-bullet feature-bullet--teal" />
+                  <div class="feature-text">
+                    <strong>对象存储服务</strong>：提供统一的文件存储抽象接口，屏蔽底层云厂商 SDK
+                    封装细节，当前对接阿里云 OSS
+                    <ol>
+                      <li><strong>文件访问与预览</strong>：提供带签名或公网地址的文件路径拼装，可直接访问下载。</li>
+                      <li>
+                        <strong>后端中继上传</strong>：微服务接收文件输入流，生成 UUID 路径前缀保证文件不重名，调用
+                        OSSClient 上传，并设置公共读权限。
                       </li>
                       <li>
-                        <strong>前端直传 V4 签名</strong>：服务端根据阿里云 OSS V4 签名规范生成临时授权凭证，前端拿此凭据直接向 OSS 提交文件，文件上传过程不经过应用网关，节省服务端带宽。
+                        <strong>前端直传 V4 签名</strong>：服务端根据阿里云 OSS V4
+                        签名规范生成临时授权凭证，前端拿此凭据直接向 OSS
+                        提交文件，文件上传过程不经过应用网关，节省服务端带宽。
                       </li>
                     </ol>
                   </div>
@@ -404,7 +619,8 @@ function navigateTo(path: string) {
                         <strong>用户业务接入</strong>：提供微信授权登录、手机号注册登录、密码登录以及退出登录接口。
                       </li>
                       <li>
-                        <strong>解耦</strong>：通过 Feign 远程调用用户与配置接口，实现前台业务流程与后台数据处理/存储解耦。
+                        <strong>解耦</strong>：通过 Feign
+                        远程调用用户与配置接口，实现前台业务流程与后台数据处理/存储解耦。
                       </li>
                     </ol>
                   </div>
@@ -415,14 +631,14 @@ function navigateTo(path: string) {
                   <div class="feature-text">
                     <strong>网关服务</strong>：基于 WebFlux 响应式架构构建，统一处理外部请求的路由调度与安全拦截
                     <ol>
+                      <li><strong>白名单机制</strong>：读取无需鉴权的路径清单，匹配成功直接放行。</li>
                       <li>
-                        <strong>白名单机制</strong>：读取无需鉴权的路径清单，匹配成功直接放行。
+                        <strong>网关异常处理</strong>：捕获网关阶段抛出的路由未找到、服务离线及鉴权失败等异常，按统一的
+                        Result 结构直接写回 JSON 报文，保证返回前端的结果一致。
                       </li>
                       <li>
-                        <strong>网关异常处理</strong>：捕获网关阶段抛出的路由未找到、服务离线及鉴权失败等异常，按统一的 Result 结构直接写回 JSON 报文，保证返回前端的结果一致。
-                      </li>
-                      <li>
-                        <strong>统一鉴权与状态校验</strong>：拦截请求并解析 Token 令牌凭证，校验签名有效性，并联动 Redis 校验用户登录态是否过期。鉴权通过后自动将用户信息保留，传给下游业务微服务，使下游服务无需编写重复的鉴权代码。
+                        <strong>统一鉴权与状态校验</strong>：拦截请求并解析 Token 令牌凭证，校验签名有效性，并联动 Redis
+                        校验用户登录态是否过期。鉴权通过后自动将用户信息保留，传给下游业务微服务，使下游服务无需编写重复的鉴权代码。
                       </li>
                     </ol>
                   </div>
@@ -433,76 +649,103 @@ function navigateTo(path: string) {
             <!-- 基础组件库 -->
             <div class="detail-block detail-block--separated">
               <div class="detail-badge detail-badge--teal">基础组件库</div>
-              <p class="section-lead">公共代码下沉到独立子模块中，各微服务按需依赖：</p>
               <div class="feature-list">
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--teal" />
                   <div class="feature-text">
-                    <strong>统一响应与异常处理</strong>：接口统一返回 <code>Result&lt;T&gt;</code>。错误码采用 6
-                    位编码，前 3 位对齐 HTTP 状态码（例如 400xxx 对应 400 客户端错误，500xxx 对应 500 服务端错误），后 3
-                    位为业务明细码；<code>GlobalExceptionHandler</code> 拦截 Controller 抛出的
-                    <code>ServiceException</code>，并将 HTTP Response 状态码同步更新为 6 位错误码的前 3 位；捕获
-                    <code>MethodArgumentNotValidException</code> 和
-                    <code>ConstraintViolationException</code> 提取校验失败信息并合并为逗号分隔字符串；拦截 404、405
-                    及未捕获 Exception 兜底。
+                    <strong>核心工具与异步线程池</strong>
+                    <ol>
+                      <li>
+                        <strong>基础工具支持</strong>：集成敏感数据对称加解密、JSON
+                        序列化与复杂对象转换、对象属性复制及通用分页工具。
+                      </li>
+                      <li>
+                        <strong>异步线程池策略管理</strong>：通过 nacos
+                        服务提供参数外部化配置的异步线程池，支持拒绝策略切换和容器关闭时等待在途任务执行完毕。
+                      </li>
+                    </ol>
                   </div>
                 </div>
 
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--teal" />
                   <div class="feature-text">
-                    <strong>认证与会话</strong>：<code>TokenService</code> 根据登录用户信息生成 JWT，同时在 Redis
-                    中写入以随机 UUID
-                    为键的会话记录并设置失效时间。支持每次登录生成新会话并清除同一用户历史令牌，严谨控制单点登录。
+                    <strong>两级缓存基础服务</strong>
+                    <ol>
+                      <li>
+                        <strong>本地与分布式缓存协同</strong>：结合 Caffeine 本地高性能内存缓存与 Redis
+                        分布式缓存。读取数据时优先查本地缓存，未命中时查分布式缓存并自动回填本地，双层均未命中才访问源数据库，减轻热点数据对分布式缓存和数据库的访问压力。
+                      </li>
+                    </ol>
                   </div>
                 </div>
 
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--teal" />
                   <div class="feature-text">
-                    <strong>两级缓存</strong>：<code>CacheService</code> 结合 Caffeine 本地缓存（L1）和 Redis
-                    分布式缓存（L2）。查询时先读本地缓存，本地未命中查 Redis，Redis
-                    命中后自动回填本地缓存；两层均未命中时再查数据库。
+                    <strong>分布式锁与 Redis 服务</strong>
+                    <ol>
+                      <li><strong>Redis 基础操作</strong>：提供标准化常用键值、哈希、列表等数据结构操作。</li>
+                      <li>
+                        <strong>分布式锁与自动续期</strong
+                        >：基于分布式锁机制实现跨服务并发互斥，内置看门狗自动续期逻辑，防止因耗时业务导致锁提前超时释放，并约束锁由持有线程安全释放。
+                      </li>
+                    </ol>
                   </div>
                 </div>
 
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--teal" />
                   <div class="feature-text">
-                    <strong>分布式锁与 Redis</strong>：<code>RedissonLockService</code> 基于 Redisson
-                    客户端封装分布式锁，获取锁时未指定租期即自动开启看门狗定时续期，防止业务逻辑未执行完毕锁失效，并要求释放锁必须在持有锁的同一线程执行；
-                    <code>RedisService</code> 封装常用的字符串、哈希、列表等数据结构操作。
+                    <strong>消息队列标准化配置</strong>
+                    <ol>
+                      <li>
+                        <strong>时间格式归一</strong
+                        >：统一消息体中的日期时间为标准字符串格式，保障消息生产与消费解析的一致性。
+                      </li>
+                      <li>
+                        <strong>统一消息序列化</strong>：采用标准 JSON
+                        格式进行消息序列化与反序列化，规避二进制序列化的版本与跨平台兼容问题。
+                      </li>
+                    </ol>
                   </div>
                 </div>
 
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--teal" />
                   <div class="feature-text">
-                    <strong>消息队列配置</strong>：<code>RabbitMqConfig</code> 配置
-                    <code>Jackson2JsonMessageConverter</code>，通过 <code>mqObjectMapper</code> 注册
-                    <code>JavaTimeModule</code>，强制将 <code>LocalDateTime</code> 等时间类型按
-                    <code>yyyy-MM-dd HH:mm:ss</code> 格式序列化为 JSON
-                    字符串，解决跨语言或不同版本反序列化格式不兼容问题。
+                    <strong>统一令牌与会话管理</strong>
+                    <ol>
+                      <li>
+                        <strong>异步线程池管理</strong>：通过 nacos 提供参数外部化配置的线程池，支持拒绝策略热切换。
+                      </li>
+                      <li>
+                        <strong>凭证校验</strong>：负责生成包含用户信息的无状态令牌，在 Redis
+                        中同步记录会话有效期；新登录时支持自动更新旧状态，实现单设备互斥登录。
+                      </li>
+                    </ol>
                   </div>
                 </div>
 
                 <div class="feature-item">
                   <span class="feature-bullet feature-bullet--teal" />
                   <div class="feature-text">
-                    <strong>核心工具集</strong>：<code>ThreadPoolConfig</code> 配置
-                    <code>ThreadPoolTaskExecutor</code>，开放 <code>corePoolSize</code>、<code>maxPoolSize</code>、
-                    <code>queueCapacity</code> 和 <code>keepAliveSeconds</code> 等属性，设置
-                    <code>waitForTasksToCompleteOnShutdown</code> 确保容器停止时等待任务跑完，支持配置
-                    <code>CallerRunsPolicy</code> 拒绝策略；<code>AESUtil</code> 提供敏感信息对称加解密；
-                    <code>JsonUtil</code> 封装 Jackson 对象的序列化、反序列化与泛型转换；
-                    <code>BeanUtil</code>、<code>PageUtil</code>、<code>VerifyUtil</code>
-                    分别提供属性浅拷贝、分页结果组装和常用格式校验。
+                    <strong>统一响应与异常处理</strong>
+                    <ol>
+                      <li><strong>全局异常拦截</strong>：支持统一拦截业务自定义异常等多种系统级错误。</li>
+                      <li>
+                        <strong>分层错误码设计</strong>：采用 6 位全局错误码，前 3 位映射标准 HTTP 状态码，后 3
+                        位标识具体业务原因。
+                      </li>
+                      <li>
+                        <strong>统一响应规范</strong>：统一采用标准的响应报文结构，包含状态码、提示信息和业务数据，并将
+                        HTTP 响应状态码同步更新为错误码前 3 位。
+                      </li>
+                    </ol>
                   </div>
                 </div>
               </div>
             </div>
-
-
           </article>
         </div>
       </section>
@@ -772,6 +1015,11 @@ function navigateTo(path: string) {
   background: rgba(121, 168, 142, 0.06);
   border: 1px solid rgba(121, 168, 142, 0.2);
   border-radius: 10px;
+
+  &--purple {
+    background: rgba(186, 181, 219, 0.08);
+    border-color: rgba(186, 181, 219, 0.25);
+  }
 }
 
 .tech-category-row {
@@ -949,7 +1197,7 @@ function navigateTo(path: string) {
 }
 
 .contract-steps {
-  margin: 0.35rem 0 0.6rem;
+  margin: -0.65rem 0 0.6rem;
   padding-left: 1.25rem;
   display: flex;
   flex-direction: column;

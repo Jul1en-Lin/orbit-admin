@@ -13,6 +13,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      port: 18000,
+      host: '0.0.0.0',
       proxy: {
         '/api': {
           target: VITE_GATEWAY_TARGET,
@@ -20,6 +22,10 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/api/, '/admin'),
         },
       },
+    },
+    preview: {
+      port: 18000,
+      host: '0.0.0.0',
     },
     test: {
       environment: 'jsdom',

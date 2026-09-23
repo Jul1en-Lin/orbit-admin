@@ -84,7 +84,7 @@ describe('nginx configuration files structure and directives', () => {
       const serverBlock = extractBlock(content, 'server')
       expect(serverBlock).toContain('root /usr/share/nginx/html;')
       expect(serverBlock).toContain('index index.html;')
-      expect(serverBlock).toContain('listen 80;')
+      expect(serverBlock).toContain('listen 18000;')
     })
 
     it('configures static assets (/assets/) with try_files $uri =404 and strict caching, never falling back to index.html', () => {

@@ -42,7 +42,7 @@ corepack pnpm install --frozen-lockfile
 corepack pnpm dev
 ```
 
-默认开发服务器启动在 `http://localhost:5173`。
+默认开发服务器启动在 `http://localhost:18000`。
 
 ### 3.2 网关代理目标配置
 

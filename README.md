@@ -24,7 +24,7 @@ corepack pnpm install --frozen-lockfile
 corepack pnpm dev
 ```
 
-开发服务器默认运行在 `http://localhost:5173`。
+开发服务器默认运行在 `http://localhost:18000`。
 
 ### 代理与环境配置
 
